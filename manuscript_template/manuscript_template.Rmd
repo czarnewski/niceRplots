@@ -1,0 +1,175 @@
+---
+title: "Manuscript Title"
+subtitle: A demonstration of Rmarkdown using Herman Bumpus' data
+author: |
+  Author One^1^,
+  Author Two^2^,
+  Author Three^1,2^
+keywords: "pandoc, r markdown, knitr"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  bookdown::pdf_document2:
+      keep_tex: true
+      toc: false
+  bookdown::html_document2: default
+  bookdown::word_document2: default
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{MANUSCRIPT AUTHORS}
+- \fancyhead[R]{MANUSCRIPT SHORT TITLE}
+- \usepackage{lineno}
+- \linenumbers
+linestretch: 1.5
+link-citations: yes
+linkcolor: blue
+csl: nature.csl
+bibliography: refs.bib
+editor_options: 
+  chunk_output_type: inline
+---
+
+\footnotetext[1]{University of Nowhere}
+\footnotetext[2]{University of Somewhere}
+\footnotetext[3]{University of Lalaland}
+
+
+
+```{r Setup..., message=FALSE, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'p') # Places figures on their own pages
+knitr::opts_chunk$set(out.width = '100%', dpi=300)
+
+# I usually load my libraries up front to keep things organized
+library(bookdown)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(stringr)
+source('plotting_functions.R')
+```
+
+
+
+Abstract
+===============================================================================
+  
+Writing documents in Rmarkdown using Rstudio can make scientific workflow more efficient, and here I demonstrate how a scientific manuscript can be written using a classical data set first published by Herman Bumpus. I integrate Bumpus' data with Rmarkdown to produce a sample manuscript, testing whether or not sparrow body length decreases survival following a storm in southern New England. Using a t-test, I show that surviving birds have lower body length than birds that do not survive. All analyses of data are incorporated into the underlying Rmarkdown document, including figures and a table. References are incorporated using BibTeX. The underlying code for this manuscript is publicly available [on GitHub](https://github.com/StirlingCodingClub/Manuscripts_in_Rmarkdown) as part of the Stirling Coding Club organisation.
+
+
+\clearpage
+
+Introduction
+================================================================================
+
+In the late 1800s, there was a particulalry severe snowstorm in Providence, Rhode Island. At the time, Herman Bumpus was a professor of comparative zoology at Brown University. Bumpus noticed that the storm had a particularly negative effect on the local sparrow population (*Passer domesticus*) and decided to use the event to test Charle's Darwin's theory of natural selection [@Darwin1859]. Bumpus published a paper and all of the data that he had collected [@Bumpus1898]. These data are now a classic data set in biology, and have been analysed multiple times (e.g., [@Johnston1972]). Here I will use Bumpus' data to demonstrate how to write a scientific manuscript in Rmarkdown.
+
+The focus of this manuscript is therefore not on Bumpus' data or survival of sparrows *per se*, but the process of scientific writing using Rmarkdown. I have chosen the Bumpus data set because it provides a useful tool for working through most key features of Rmarkdown that scientists might want to use when writing a manuscript. The example question that I will address through this data set and R analysis in Rmarkdown is whether or not increasing sparrow body length is associated with decreased survival following a storm.
+
+
+Results
+===============================================================================
+
+```{r, echo = FALSE, eval = TRUE}
+dat  <- read.csv(file = "data/Bumpus_data.csv");
+res  <- t.test(formula = dat$totlen ~ dat$surv, alternative = "less", 
+               var.equal = TRUE); # Two sample t-test results
+tval <- as.numeric(res$statistic); # Get the t-test statistic
+pval <- res$p.value; # Get the p value from the t-test results
+live <- as.numeric(res$estimate[1]); # Get mean length of living sparrows
+dead <- as.numeric(res$estimate[2]); # Get mean length of dying sparrows
+```
+
+Bumpus' data included `r sum(dat$surv == "alive")` sparrows that lived and `r sum(dat$surv == "dead")` sparrows that died. The mean total length of living sparrows was `r round(live, digits = 2)` mm, and the mean total length of dead sparrows was 'r round(dead, digits = 2)' mm. The two sample t-test revealed a t-statistic of `r round(tval, digits = 2)`, which corresponds to a p-value of $P =$ `r round(pval, digits = 5)` (Figure \@ref(fig:fig2)a-c).
+
+
+```{r fig2, echo = FALSE, eval = TRUE, warning='hide',message='hide',fig.width = 12, fig.height = 5, fig.cap = "Box plot of the total lengths of live and dead sparrows following a snowstorm in Providence, RI, as originally collected by Hermon Bumpus. The central horizontal line shows median values. Boxes and whiskers show inter-quartile ranges and extreme values, respectively."}
+
+# DEFINE FIGURE LAYOUT
+layout(matrix(c(1,1,2,3,3,4,4,
+                1,1,2,5,6,8,8,
+                1,1,2,7,7,8,8),
+              nrow = 3, byrow = T), 
+   widths=c(1,1), heights=c(1,1))
+#layout.show(8)
+
+
+# PLOT FIGURES
+figlabels <- letters
+for(i in 1:8){
+  par(mar = c(2.5, 4, 1.6, 1.1), mgp = c(3, 0.5, 0),cex.lab = 1, cex.main = 1.2)
+  plot(x = dat$surv, y = dat$totlen, cex.axis = 1.5, lwd = 2,
+     ylab = "Sparrow Length", cex.lab = 1.5,las=1)
+  fig_label(figlabels[1],cex = 3,font = 2); figlabels <- figlabels[-1]
+}
+```
+
+
+Discussion
+================================================================================
+
+I have analysed data collected by Herman Bumpus [@Bumpus1898] on the relationship between sparrow (*Passer domesticus*) total length and surival following an unusually severe storm. I found that sparrows that died in the storm were longer than sparrows that survived, which suggests that higher sparrow body length decreased survival. Of course, it is not possible to definitively conclude a causal relationship between any aspect of body size and sparrow survival<!--- BD Note: maybe explain this better --->, and even the available data collected by Bumpus would permit a more thoughtful analysis than that conducted in this study (see [Appendix Table 1](#appendix)). 
+
+<!---
+
+Here is one way to add some more detailed comments into the manuscript itself, though this can also be done within the text (see above). 
+
+--->
+
+Overall, this document demonstrates how high quality, professional looking documents can be written using Rmarkdown. The [underlying code](https://github.com/StirlingCodingClub/Manuscripts_in_Rmarkdown/blob/master/ms.Rmd) for this manuscript is publicly available, along with [accompanying notes](https://stirlingcodingclub.github.io/Manuscripts_in_Rmarkdown/Rmarkdown_notes.html) to understand how it was written. By using Rmarkdown to write manuscripts, authors can more easily use version control (e.g., git) throughout the writing process. The ability to easily integrate citations though BibTeX, LaTeX tools, and dynamic R code can also make writing much more efficient and more enjoyable. Further, obtaining the benefits of using Rmarkdown does not need to come with the cost of isolating colleagues who prefer to work with Word or LaTeX because Rmarkdown can easily be converted to these formats (in the case of Word, with the push of a button). By learning all of the tools used in this manuscript, readers should have all of the necessary knowledge to get started writing and collaborating in Rmarkdown.
+
+
+\clearpage
+
+Methods
+================================================================================
+
+Bumpus focused his study on the House Sparrow (*Passer domesticus*; see Figure 1), which has a very wide global distribution. It is native to Europe and Asia, but not the Americas where Bumpus collected his original study [@Bumpus1898]. In addition to measuring total length and survival for 136 sparrows, Bumpus measured sparrow sex, wingspan, and mass, and also the length of each sparrow's head, humerus, tibiotarsus, skull, and sternum. While modern ornithologists believe that the total body length measurement that I will use today is subject to high observational error [@Johnston1972], it will be more than sufficient for demonstrating Rmarkdown.
+
+<!--- Note that the image below is in the public domain --->
+<!--- https://commons.wikimedia.org/wiki/File:Lto-tpbo-passer-domesticus-05.JPG --->
+<center>
+
+![*Passer domesticus*](images/sparrow.jpg)
+
+</center>
+
+I performed an independent two-sample student's t-test on sparrow total body length to test whether or not sparrows that died in the 1898 storm were larger than sparrows that survived. I assume that both groups of sparrows (dead and living) have equal variances, so the test statistic $t$ is calculated as follows,
+
+$$t = \frac{\bar{X}_{1} - \bar{X}_{2}} {s_{p} \times \sqrt{\frac{1}{n_{1}} + \frac{1}{n_{2}}}}.$$
+
+In the above, $\bar{X}_{1}$ and $\bar{X}_{2}$ are the mean of the samples of sparrows that died and lived, respectively. Similarly, $n_{1}$ and $n_{2}$ are the sample sizes of sparrows that died and lived, and $s_{p}$ is the pooled sample mean, which is calculated as follows,
+
+$$s_{p} = \sqrt{\frac{s^{2}_{X_{1}} + s^{2}_{X_{2}}}{2}}.$$
+
+In the above, the $s^{2}_{X_{1}}$ and $s^{2}_{X_{2}}$ are the sample standard deviations for sparrows that died and lived, respectively. I conduceted the two sample t-test using the `t.test` function in R.
+
+
+\clearpage
+
+References
+================================================================================
+
+<div id="refs"></div>
+
+
+\clearpage
+
+
+
+<a name="appendix">Appendix Table 1</a>
+================================================================================
+
+An example table is shown below, which includes all of the variables collected by @Bumpus1898 for the first 10 measured sparrows. The full data set can be found online in [GitHub](https://github.com/StirlingCodingClub/Manuscripts_in_Rmarkdown/blob/master/data/Bumpus_data.csv).
+
+```{r, echo = FALSE, fig.pos='H',fig.show='hold'}
+library(knitr)
+kable_styling(kableExtra::kable(x = dat[1:10,], caption = "First ten rows of the original data set collected by Hermon Bumpus"),latex_options = "hold")
+```
+
+
+
+
+
+
