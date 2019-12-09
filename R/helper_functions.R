@@ -1,12 +1,18 @@
 library(scales)
 #MAIN Violin plot function
 #---------------
-violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="log",col="default",
-                    pt.col="grey",bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1.7,main=gene,...){
+violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
+                    pt.col="grey",bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
+  if(gene %in% rownames(data@assays[[assay]]@data) ){
+    feat <- data@assays[[assay]]@data[gene,]
+  } else if(gene %in% colnames(data@meta.data) ) { 
+    feat <- data@meta.data[, gene]
+  } else { message("Feature or metadata not found!!") }
+  
   #par(mar=c(2,3,2,1))
   n <- length(unique(data@meta.data[,clustering]))
-  my_max <- max(data@assays[[assay]]@data[gene,],1)*1.1
-  plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main=main,xaxt = "n",yaxt = "n",cex.main=cex.main)
+  my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
+  plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main=main,xaxt = "n",cex.main=cex.main)
   mtext(side = 2, text = ylab, line = 2,las=3)
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
   col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
@@ -20,8 +26,8 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
       #points(runif(sum(DATA@meta.data[,clustering] == cl),min = i-.4,max = i+.4),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey40")
       #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
     #}
-    x <- data@assays[[assay]]@data[gene,data@meta.data[,clustering] == cl]
-    suppressWarnings(suppressMessages( try(draw_violin(x,at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method="proportional",
+    x <- na.omit(feat[data@meta.data[,clustering] == cl])
+    suppressWarnings(suppressMessages( try(draw_violin(x, at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
                bw = bw,border =  "grey20",max_points=max_points)) ))
     #paste0(col_pal[i])
     #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
@@ -31,22 +37,91 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
   lines(c(n+.6,n+.6),c(0,my_max),col="white",lwd=6,xpd=T)
   abline(h=-.1,v=.4,xpd=F,lwd=2)
   if(plot_x_axis){
-    axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=1.5)
+    axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
   }
-  if(plot_y_axis){
-      axis(2, at=1:10, labels=1:10,cex.axis=1.5,las=1)
-  }
+  # if(plot_y_axis){
+  #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
+  # }
 }
 #---------------
 
 
+
+
+
+#MAIN Violin plot function
+#---------------
+violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
+                    pt.col="grey",bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
+  n <- length(unique(data@meta.data[,clustering]))
+  plot(c(.4,n+.6),c(-1,-1), ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main="",xaxt = "n",yaxt = "n",cex.main=cex.main)
+  
+  #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
+  col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
+  col_pal <- col_pal[sort(unique(data@meta.data[,clustering]))]
+  if(col=="default"){col <- paste0(col_pal,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
+  
+  panel_row <- length(genes)
+  for(gene in genes){
+    panel_row <- panel_row - 1
+  
+    if(gene %in% rownames(data@assays[[assay]]@data) ){
+      feat <- data@assays[[assay]]@data[gene,]
+    } else if(gene %in% colnames(data@meta.data) ) { 
+      feat <- data@meta.data[, gene]
+    } else { message("Feature or metadata not found!!") }
+    
+    #par(mar=c(2,3,2,1))
+    my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
+    
+    for(i in 1:length(unique(data@meta.data[,clustering]))){
+      cl <- sort(unique(data@meta.data[,clustering]))[i]
+      #if(plot_points){
+      #points(runif(sum(DATA@meta.data[,clustering] == cl),min = i-.4,max = i+.4),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey40")
+      #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
+      #}
+      x <- na.omit(feat[data@meta.data[,clustering] == cl]) / my_max
+      suppressWarnings(suppressMessages( try(draw_violin(x, base=panel_row+.02,at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
+                                                         bw = bw,border =  "grey20",max_points=max_points)) ))
+      #paste0(col_pal[i])
+      #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
+      #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
+    }
+  
+  # if(plot_y_axis){
+  #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
+  # }
+    lines(c(0,n+.6),c(panel_row,panel_row),col="black",lwd=1,xpd=F)
+  }
+  
+  
+  lines(c(0,n+.6),c(length(genes),length(genes)),col="white",lwd=6,xpd=T)
+  lines(c(n+.6,n+.6),c(0,length(genes)),col="white",lwd=6,xpd=T)
+  abline(h=-.1,v=.4,xpd=F,lwd=2)
+  # if(plot_x_axis){
+  #   axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
+  # }
+  
+  mtext(at = (length(genes):1)-.5 , side = 2, text = genes, las=1 )
+  
+  text( 1:n, par("usr")[3], labels = sort(unique(data@meta.data[,clustering])), srt = 45, adj = c(1,1.5), xpd = T, cex=1)
+  
+}
+
+#---------------
+
+
+
+
+
+
 #Function to calculate violin density
 #---------------
-draw_violin <- function(x,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",bw=0.45,max_points=200){
+draw_violin <- function(x,base=min(x),method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",bw=0.45,max_points=200){
   r <- sum(x!=0)/length(x)
   if(plot_points){
-    if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x,cex=.5,col=pt.col,pch=16)}
-    if(points_method == "uniform"){points(rnorm(length(x),mean = at,sd = .12),x,cex=.5,col=pt.col,pch=16)}
+    if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x+base,cex=.5,col=pt.col,pch=16)}
+    if(points_method == "uniform"){points(rnorm(length(x),mean = at,sd = .12),x+base,cex=.5,col=pt.col,pch=16)}
   }
 
   if(method == "uniform"){
@@ -70,9 +145,9 @@ draw_violin <- function(x,method="log",plot_points=F,points_method="proportional
     ys <- c(d1$x,d2$x)
     xs <- c(d1$y,d2$y)*bw
   }
-  ulim <- max(quantile(x,.99),0.1)
+  ulim <- max(quantile(x,1),0.015)
   llim <- max(min(x),-0.1)
   polygon( c(xs[ys<ulim & ys>llim] , -rev(xs[ys<ulim& ys>llim]) )+at, 
-           c(ys[ys<ulim & ys>llim], rev(ys[ys<ulim& ys>llim])) ,col = col,border = border)
+           c(ys[ys<ulim & ys>llim]+base, rev(ys[ys<ulim& ys>llim])+base) ,col = col,border = border)
 }
 #---------------

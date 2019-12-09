@@ -5,7 +5,7 @@ require(RColorBrewer)
 require(MASS)
 require(spatstat)
 
-plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,...){
+plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,col=c("grey90","navy"),...){
   fn <- feat
   
   if(feat %in% rownames(x@assays[[assay]]@data) ){
@@ -19,16 +19,16 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
   feat[feat > 1] <- 1
   o <- order(feat)
   
-  pal <- colorRampPalette(c("grey90","navy","blue3"))(10)[round(feat*9)+1][o]
+  pal <- colorRampPalette(col)(10)[round(feat*9)+1][o]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
   
   #creates plot
-  plot( x@reductions[[red]]@cell.embeddings[o,dims] , xlab="",ylab="",type="n", xaxt="n",yaxt="n", main=ifelse(main!=NULL, main, paste0(fn,"_",assay)),...)
+  plot( x@reductions[[red]]@cell.embeddings[o,dims] , type="n", xaxt="n",yaxt="n", main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
   
   #adds underlying graph
-  if(!is.null(add_graph) ){ if( add_graph %in% names(a@graphs)  ){
-    add_graph(a,red=x@reductions[[red]]@cell.embeddings[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+  if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
+    add_graph(x,red=x@reductions[[red]]@cell.embeddings[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
   
   #compute density and centroids
   if(!is.null(label) ){
@@ -64,11 +64,11 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
   options(warn=-1)
   
   #creates plot
-  plot( x@reductions[[red]]@cell.embeddings[,dims], type="n", xaxt="n",yaxt="n", main=ifelse(main!=NULL, main, fn),...)
+  plot( x@reductions[[red]]@cell.embeddings[,dims], type="n", xaxt="n",yaxt="n",main=ifelse( !is.null(main), main, paste0(fn)),...)
 
   #adds underlying graph
-  if(!is.null(add_graph) ){ if( add_graph %in% names(a@graphs)  ){
-    add_graph(a,red=x@reductions[[red]]@cell.embeddings[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+  if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
+    add_graph(x,red=x@reductions[[red]]@cell.embeddings[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
   
   #compute density and centroids
   if(label | add_lines){
@@ -136,6 +136,12 @@ add_centroid_lines <- function(red,feat,pal,centroids){
 
 
 
+plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL){
+  gtemp <- igraph::graph_from_adjacency_matrix(TOM[names(gene_module[ gene_module %in% mm ]),names(gene_module[ gene_module %in% mm ])],weighted = T,diag = F)
+  l <- layout_nicely(gtemp)
+  plot(l,type="n",axes=F,frame=F,xlab="",ylab = "",main=ifelse(is.null(main), mm, main))
+  text(l , labels=names(gene_module[ gene_module %in% mm ]) , cex=.5 )
+}
 
 
 
