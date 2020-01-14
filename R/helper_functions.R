@@ -1,4 +1,5 @@
 library(scales)
+library(raster)
 #MAIN Violin plot function
 #---------------
 violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
@@ -12,7 +13,10 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
   #par(mar=c(2,3,2,1))
   n <- length(unique(data@meta.data[,clustering]))
   my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
+
   plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main=main,xaxt = "n",cex.main=cex.main)
+  lines(c(0,n+.6),c(my_max,my_max),col="white",lwd=6,xpd=T)
+  lines(c(n+.6,n+.6),c(0,my_max),col="white",lwd=6,xpd=T)
   mtext(side = 2, text = ylab, line = 2,las=3)
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
   col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
@@ -27,14 +31,13 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
       #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
     #}
     x <- na.omit(feat[data@meta.data[,clustering] == cl])
-    suppressWarnings(suppressMessages( try(draw_violin(x, at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
+    suppressWarnings(suppressMessages( try(draw_violin(x, at = i,base=0.0,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
                bw = bw,border =  "grey20",max_points=max_points)) ))
     #paste0(col_pal[i])
     #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
             #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
   }
-  lines(c(0,n+.6),c(my_max,my_max),col="white",lwd=6,xpd=T)
-  lines(c(n+.6,n+.6),c(0,my_max),col="white",lwd=6,xpd=T)
+  
   abline(h=-.1,v=.4,xpd=F,lwd=2)
   if(plot_x_axis){
     axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
@@ -113,11 +116,9 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
 
 
 
-
-
 #Function to calculate violin density
 #---------------
-draw_violin <- function(x,base=min(x),method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",bw=0.45,max_points=200){
+draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",bw=0.45,max_points=200){
   r <- sum(x!=0)/length(x)
   if(plot_points){
     if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x+base,cex=.5,col=pt.col,pch=16)}
@@ -151,3 +152,90 @@ draw_violin <- function(x,base=min(x),method="log",plot_points=F,points_method="
            c(ys[ys<ulim & ys>llim]+base, rev(ys[ys<ulim& ys>llim])+base) ,col = col,border = border)
 }
 #---------------
+
+
+
+
+#Function to plot dot gene averages
+#---------------
+plot_dots <- function(data, gene_list, clustering, pal=c("grey90","grey90","grey60","blue3","navy"),main="",srt=90,cex.row=1,cex.col=1){
+  x1 <- rowsum(t(as.matrix(data@assays$RNA@data[gene_list,])), data@meta.data[,clustering])
+  x1 <- t(x1 / c(table(factor(data@meta.data[,clustering]))))
+  x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
+  
+  x2 <- rowsum(( t (as.matrix(data@assays$RNA@data[gene_list,]!=0)) *1), data@meta.data[,clustering])
+  x2 <- t(x2 / c(table(factor(data@meta.data[,clustering]))))
+  
+  plot(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))),las=1,xlim=c(1,ncol(x1)),ylim=c(1,nrow(x1)),
+       cex=c(t(x2) )*2+.2,pch=16,col=c( pal[1],colorRampPalette(pal[-1])(19))[c(t(x1) )*18+1 ],
+       axes=F,ylab="",xlab="",main=main)
+  text(1:ncol(x1), 0.3, labels = colnames(x1), srt = srt, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
+  text(0.2, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.col)
+  lines(.5+c(ncol(x1),0,0),c(0,0,nrow(x1))+.5)
+}
+#---------------
+
+
+
+
+#Heatmap plot
+#---------------
+heat_plot <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=colorRampPalette(c("purple4","black","black","yellow4","yellow1") )(90),...){
+  plot(0,type="n",ylim=c(0,1.105),xlim=c(0,1.1),col="white",axes=F,asp=F,main=main,xlab="",ylab="")
+  
+  if(!is.null(annot)){
+    increment <- min( 0.1 / length(annot), .02)
+    begin <- 1.01
+    for(i in annot){
+      end <- begin + increment
+      if(!is.null(order_metadata)){
+        annnn <- raster(matrix(as.numeric(data@meta.data[,i][order(data@meta.data[,order_metadata ])]),nrow = 1))
+      } else {
+        annnn <- raster(matrix(as.numeric(data@meta.data[,i]),nrow = 1))
+      }
+      annnn@extent <- extent(c(0,1),c(begin,end))
+      plot(annnn,col=hue_pal()(length(levels(data@meta.data[,i]) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+      text( 1.01 , (begin+end)/2 , labels = i, srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex,font=2)
+      begin <- begin + increment
+    }
+    #text( 1.01 , seq(1,length(increment))*increment+1 , labels = annot, srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex,font=2)
+  }
+  # annnn <- raster(matrix(as.numeric(data$cell_tissue_donor_plate[order(data$cell_tissue_donor_plate)]),nrow = 1))
+  # annnn@extent <- extent(c(0,1),c(1.01,1.025))
+  # plot(annnn,col=hue_pal()(length(levels(data$cell_tissue_donor_plate) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+  # 
+  # annnn <- raster(matrix(as.numeric(data$Donor[order(data$cell_tissue_donor_plate)]),nrow = 1))
+  # annnn@extent <- extent(c(0,1),c(1.03,1.045))
+  # plot(annnn,col=hue_pal()(length(levels(data$Donor) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+  # 
+  # annnn <- raster(matrix(as.numeric(data$cell_tissue[order(data$cell_tissue_donor_plate)]),nrow = 1))
+  # annnn@extent <- extent(c(0,1),c(1.05,1.065))
+  # plot(annnn,col=hue_pal()(length(levels(data$cell_tissue) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+  # 
+  # annnn <- raster(matrix(as.numeric(data$Celltype[order(data$cell_tissue_donor_plate)]),nrow = 1))
+  # annnn@extent <- extent(c(0,1),c(1.07,1.085))
+  # plot(annnn,col=hue_pal()(length(levels(data$Celltype) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+  # 
+  # annnn <- raster(matrix(as.numeric(data$Tissue[order(data$cell_tissue_donor_plate)]),nrow = 1))
+  # annnn@extent <- extent(c(0,1),c(1.09,1.105))
+  # plot(annnn,col=hue_pal()(length(levels(data$Tissue) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+  # 
+  if(!is.null(order_metadata)){
+    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) scale(x,T,T)))[,order(data@meta.data[,order_metadata])]
+  } else {
+    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) scale(x,T,T)))[,order(data$cell_tissue_donor_plate)]
+  }
+  teeeeest[teeeeest > 2]  <- cut_max
+  teeeeest[teeeeest < -2] <- cut_max
+  #teeeeest <- t(apply(teeeeest , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))
+  #teeeeest[,1000] <- NA
+  plot(raster(teeeeest),col= heat_color,asp=F,axes=F,add=T,interpolate=F,...)
+  text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex)
+  
+}
+#---------------
+
+
+
+
+

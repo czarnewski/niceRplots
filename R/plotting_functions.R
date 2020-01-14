@@ -5,7 +5,7 @@ require(RColorBrewer)
 require(MASS)
 require(spatstat)
 
-plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,col=c("grey90","navy"),...){
+plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,col=c("grey90","grey80","royalblue","navy","navy"),...){
   fn <- feat
   
   if(feat %in% rownames(x@assays[[assay]]@data) ){
@@ -19,7 +19,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
   feat[feat > 1] <- 1
   o <- order(feat)
   
-  pal <- colorRampPalette(col)(10)[round(feat*9)+1][o]
+  pal <- c( col[1],colorRampPalette(col[-1])(10))[round(feat*9)+1][o]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
   
@@ -44,7 +44,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
   if(!is.null(label)){
     label <- factor(x@meta.data[[label]])
     points(centroids[1,],centroids[2,],col="#ffffff90",pch=16,cex=2)
-    text(centroids[1,],centroids[2,],labels = unique(label))
+    text(centroids[1,],centroids[2,],labels = levels(label))
   }
 }
 
@@ -54,11 +54,11 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,...){
   fn <- feat
-  feat <- factor(x@meta.data[[feat]])
-  if( !is.na(sum(as.numeric(levels(feat)))) ){
-    levels(feat) <- levels(feat) [ order(as.numeric(levels(feat))) ] }
+  feat <- factor(as.character(x@meta.data[[feat]]))
+  # if( !is.na(sum(as.numeric(levels(feat)))) ){
+  #   levels(feat) <- levels(feat) [ order(as.numeric(levels(feat))) ] }
   
-  pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
+  pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") )
   pal <- pal[feat]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
@@ -73,8 +73,8 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
   #compute density and centroids
   if(label | add_lines){
     dens <- compute_density(x@reductions[[red]]@cell.embeddings[,dims],nbin=nbin)
-    centroids <-  sapply( as.character(unique(feat)) , reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), cl1=feat, function(jj,reds,cl1) { apply( reds[cl1==jj,],2,function(ii) {ndens <- dens[cl1==jj];weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
-    colnames(centroids) <- unique(feat)}
+    centroids <-  sapply( as.character(levels(feat)) , reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), cl1=feat, function(jj,reds,cl1) { apply( reds[cl1==jj,],2,function(ii) {ndens <- dens[cl1==jj];weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
+    colnames(centroids) <- levels(feat)}
   
   if(add_lines){
     add_centroid_lines(x@reductions[[red]]@cell.embeddings[,dims],feat,pal,centroids)}
@@ -86,7 +86,7 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
   #adds labels
   if(label){
     points(centroids[1,],centroids[2,],col="#ffffff90",pch=16,cex=2)
-    text(centroids[1,],centroids[2,],labels = unique(feat))
+    text(centroids[1,],centroids[2,],labels = levels(feat))
     }
 }
 
@@ -136,11 +136,11 @@ add_centroid_lines <- function(red,feat,pal,centroids){
 
 
 
-plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL){
+plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
   gtemp <- igraph::graph_from_adjacency_matrix(TOM[names(gene_module[ gene_module %in% mm ]),names(gene_module[ gene_module %in% mm ])],weighted = T,diag = F)
   l <- layout_nicely(gtemp)
   plot(l,type="n",axes=F,frame=F,xlab="",ylab = "",main=ifelse(is.null(main), mm, main))
-  text(l , labels=names(gene_module[ gene_module %in% mm ]) , cex=.5 )
+  text(l , labels=names(gene_module[ gene_module %in% mm ]) , ...)
 }
 
 
