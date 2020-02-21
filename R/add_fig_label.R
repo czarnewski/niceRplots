@@ -1,3 +1,24 @@
+
+
+add_letter <- function(label, cex=2, font=2,...) {
+  totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])
+  totx <- par("usr")[1] - ( (par("usr")[2] - par("usr")[1]) * par("mai")[2] / totx )
+  
+  toty <- (par("fin")[2] - par("mai")[1] - par("mai")[3])
+  toty <- par("usr")[4] + ( (par("usr")[4] - par("usr")[3]) * par("mai")[3] / toty )
+  
+  
+  sw <- strwidth(label[1], cex=cex) * 60/100
+  sh <- strheight(LETTERS[1], cex=cex) * 60/100
+  
+  text(label[1], x=totx+sw, y=toty-sh, xpd=T, cex=cex, font=font,...)
+}
+
+
+
+
+
+
 fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   
   region <- match.arg(region, c("figure", "plot", "device"))
@@ -60,4 +81,36 @@ fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   
   text(x1, y1, text, cex=cex, ...)
   return(invisible(c(x,y)))
+}
+
+
+#https://waterprogramming.wordpress.com/2015/12/02/easy-labels-for-multi-panel-plots-in-r/
+#https://bitbucket.org/ggg121/r_figure_letter.git
+put.fig.letter <- function(label, location="topleft", x=NULL, y=NULL, 
+                           offset=c(0, 0), cex=cex,...) {
+  if(length(label) > 1) {
+    warning("length(label) > 1, using label[1]")
+  }
+  
+  sw <- strwidth(label[1], cex=cex) * 60/100
+  sh <- strheight(label[1], cex=cex) * 60/100
+  
+  if(is.null(x) | is.null(y)) {
+    coords <- switch(location,
+                     topleft = c(0,1)            + c(sw,-sh),
+                     topcenter = c(0.5,1)        + c(-sw/2,-sh),
+                     topright = c(1, 1)          + c(-sw,-sh),
+                     bottomleft = c(0, 0)        + c(sw,+sh), 
+                     bottomcenter = c(0.5, 0)    + c(-sw/2,+sh), 
+                     bottomright = c(1, 0)       + c(-sw,+sh),
+                     c(0, 1)                     + c(sw,-sh) )
+  } else {
+    coords <- c(x,y)
+  }
+  
+  
+  this.x <- grconvertX(coords[1] + offset[1], from="nfc", to="user")
+  this.y <- grconvertY(coords[2] + offset[2], from="nfc", to="user")
+  
+  text(labels=label[1], x=this.x, y=this.y, xpd=T,cex=cex, ...)
 }

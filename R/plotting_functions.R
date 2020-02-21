@@ -33,7 +33,12 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
   #compute density and centroids
   if(!is.null(label) ){
     dens <- compute_density(x@reductions[[red]]@cell.embeddings[,dims],nbin=nbin)
-    centroids <-  sapply( unique(label) , red=x@reductions[[red]]@cell.embeddings[,dims], cl1=as.character(label), function(jj,red,cl1) { apply( red[cl1==jj,],2,function(ii) {ndens <- dens[cl1==jj];weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
+    centroids <-  sapply( unique(label) , 
+                          red=x@reductions[[red]]@cell.embeddings[,dims], 
+                          cl1=as.character(label), 
+                          function(jj,red,cl1) { apply( red[cl1==jj,],2, 
+                             function(ii) {ndens <- dens[cl1==jj]
+                             weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
     colnames(centroids) <- unique(label)}
   
   #adds points

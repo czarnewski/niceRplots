@@ -1,5 +1,5 @@
-library(scales)
-library(raster)
+require(scales)
+require(raster)
 #MAIN Violin plot function
 #---------------
 violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
@@ -110,7 +110,6 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   text( 1:n, par("usr")[3], labels = sort(unique(data@meta.data[,clustering])), srt = 45, adj = c(1,1.5), xpd = T, cex=1)
   
 }
-
 #---------------
 
 
@@ -158,20 +157,35 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 
 #Function to plot dot gene averages
 #---------------
-plot_dots <- function(data, gene_list, clustering, pal=c("grey90","grey90","grey60","blue3","navy"),main="",srt=90,cex.row=1,cex.col=1){
-  x1 <- rowsum(t(as.matrix(data@assays$RNA@data[gene_list,])), data@meta.data[,clustering])
+plot_dots <- function(data, gene_list, clustering, pal=c("grey80","blue3"),main="",srt=90,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=F){
+  x1 <- rowsum(t(as.matrix(data@assays$RNA@data[unique(gene_list),])), data@meta.data[,clustering])
   x1 <- t(x1 / c(table(factor(data@meta.data[,clustering]))))
   x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
   
-  x2 <- rowsum(( t (as.matrix(data@assays$RNA@data[gene_list,]!=0)) *1), data@meta.data[,clustering])
+  x2 <- rowsum(( t (as.matrix(data@assays$RNA@data[unique(gene_list),]!=0)) *1), data@meta.data[,clustering])
   x2 <- t(x2 / c(table(factor(data@meta.data[,clustering]))))
   
-  plot(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))),las=1,xlim=c(1,ncol(x1)),ylim=c(1,nrow(x1)),
-       cex=c(t(x2) )*2+.2,pch=16,col=c( pal[1],colorRampPalette(pal[-1])(19))[c(t(x1) )*18+1 ],
-       axes=F,ylab="",xlab="",main=main)
-  text(1:ncol(x1), 0.3, labels = colnames(x1), srt = srt, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
-  text(0.2, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.col)
-  lines(.5+c(ncol(x1),0,0),c(0,0,nrow(x1))+.5)
+  
+  plot(0,0,type="n",las=1,xlim=c(1,ncol(x1)),ylim=c(1,nrow(x1)),axes=F,ylab="",xlab="",main=main)
+  
+  if(show_grid){
+    for(i in 1:length(unique(data@meta.data[,clustering]) )){
+      lines(c(i,i),c(length(unique(gene_list))+.5,0),col="grey95",lwd=.5,xpd=F)
+    }
+    for(i in 1:length(unique(gene_list)) ){
+      lines(c(0,length(unique(data@meta.data[,clustering]) )+0.5),c(i,i),col="grey95",lwd=.5,xpd=F)
+    }
+  }
+  
+  points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
+         pch=16, col=c( "grey95",colorRampPalette(pal)(19))[c(t(x1) )*18+1 ],xpd=T)
+  
+  text(1:ncol(x1), par("usr")[3]-.3, labels = colnames(x1), srt = srt, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
+  text(0.4, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.col)
+  if(show_axis){
+    lines(.5+c(ncol(x1),0,0),c(0,0,nrow(x1))+.5)
+    lines(.5+c(0,length(unique(data@meta.data[,clustering]) )),c(par("usr")[3],par("usr")[3]),col="black",lwd=1,xpd=T)
+  }
 }
 #---------------
 
@@ -180,8 +194,8 @@ plot_dots <- function(data, gene_list, clustering, pal=c("grey90","grey90","grey
 
 #Heatmap plot
 #---------------
-heat_plot <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=colorRampPalette(c("purple4","black","black","yellow4","yellow1") )(90),...){
-  plot(0,type="n",ylim=c(0,1.105),xlim=c(0,1.1),col="white",axes=F,asp=F,main=main,xlab="",ylab="")
+plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=colorRampPalette(c("purple4","black","black","yellow4","yellow1") )(90),...){
+  plot(0,type="n",ylim=c(0,1.105),xlim=c(0,1.25),col="white",axes=F,asp=F,main=main,xlab="",ylab="")
   
   if(!is.null(annot)){
     increment <- min( 0.1 / length(annot), .02)
@@ -230,7 +244,7 @@ heat_plot <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
   #teeeeest <- t(apply(teeeeest , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))
   #teeeeest[,1000] <- NA
   plot(raster(teeeeest),col= heat_color,asp=F,axes=F,add=T,interpolate=F,...)
-  text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex)
+  text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex,add=T)
   
 }
 #---------------
