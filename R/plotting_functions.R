@@ -56,15 +56,14 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 
 
 
-plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
+plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2), col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,...){
   fn <- feat
   feat <- factor(as.character(x@meta.data[[feat]]))
   # if( !is.na(sum(as.numeric(levels(feat)))) ){
   #   levels(feat) <- levels(feat) [ order(as.numeric(levels(feat))) ] }
-  
-  pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") )
-  pal <- pal[feat]
+  try(col <- colorRampPalette(col)(length(col)))
+  col <- col[feat]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
   
@@ -82,10 +81,10 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
     colnames(centroids) <- levels(feat)}
   
   if(add_lines){
-    add_centroid_lines(x@reductions[[red]]@cell.embeddings[,dims],feat,pal,centroids)}
+    add_centroid_lines(x@reductions[[red]]@cell.embeddings[,dims],feat,col,centroids)}
   
   #adds points
-  points(x@reductions[[red]]@cell.embeddings[,dims],pch=pch,cex=cex,bg=paste0(pal,90), col=pal )
+  points(x@reductions[[red]]@cell.embeddings[,dims],pch=pch,cex=cex,bg=paste0(col,90), col=col )
   options(warn=0)
   
   #adds labels
