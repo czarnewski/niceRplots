@@ -3,7 +3,7 @@ require(raster)
 #MAIN Violin plot function
 #---------------
 violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
-                    pt.col="grey",bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
+                    pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
   if(gene %in% rownames(data@assays[[assay]]@data) ){
     feat <- data@assays[[assay]]@data[gene,]
   } else if(gene %in% colnames(data@meta.data) ) { 
@@ -32,7 +32,7 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
     #}
     x <- na.omit(feat[data@meta.data[,clustering] == cl])
     suppressWarnings(suppressMessages( try(draw_violin(x, at = i,base=0.0,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
-               bw = bw,border =  "grey20",max_points=max_points)) ))
+               bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col,pt.cex=pt.cex,pt.pch=pt.pch)) ))
     #paste0(col_pal[i])
     #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
             #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
@@ -85,7 +85,7 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
       #}
       x <- na.omit(feat[data@meta.data[,clustering] == cl]) / my_max
       suppressWarnings(suppressMessages( try(draw_violin(x, base=panel_row+.02,at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
-                                                         bw = bw,border =  "grey20",max_points=max_points)) ))
+                                                         bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col,pt.cex=pt.cex,pt.pch=pt.pch)) ))
       #paste0(col_pal[i])
       #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
       #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
@@ -117,11 +117,11 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
 
 #Function to calculate violin density
 #---------------
-draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",bw=0.45,max_points=200){
+draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",border="grey",at=1,pt.col="grey",pt.cex=0.5,pt.pch=16,bw=0.45,max_points=200){
   r <- sum(x!=0)/length(x)
   if(plot_points){
-    if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x+base,cex=.5,col=pt.col,pch=16)}
-    if(points_method == "uniform"){points(rnorm(length(x),mean = at,sd = .12),x+base,cex=.5,col=pt.col,pch=16)}
+    if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
+    if(points_method == "uniform"){points(rnorm(length(x),mean = at,sd = .12),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
   }
 
   if(method == "uniform"){
@@ -208,7 +208,7 @@ plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
         annnn <- raster(matrix(as.numeric(data@meta.data[,i]),nrow = 1))
       }
       annnn@extent <- extent(c(0,1),c(begin,end))
-      plot(annnn,col=hue_pal()(length(levels(data@meta.data[,i]) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
+      plot(annnn,col=hue_pal()(length(unique(data@meta.data[,i]) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
       text( 1.01 , (begin+end)/2 , labels = i, srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex,font=2)
       begin <- begin + increment
     }
