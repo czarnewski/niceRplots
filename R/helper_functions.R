@@ -20,7 +20,7 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
   mtext(side = 2, text = ylab, line = 2,las=3)
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
   col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
-  col_pal <- col_pal[sort(unique(data@meta.data[,clustering]))]
+  col_pal <- col_pal[as.factor(sort(unique(data@meta.data[,clustering])))]
 
   if(col=="default"){col <- paste0(col_pal,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
 
@@ -61,7 +61,7 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
 
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
   col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
-  col_pal <- col_pal[sort(unique(data@meta.data[,clustering]))]
+  col_pal <- col_pal[as.factor(sort(unique(data@meta.data[,clustering])))]
   if(col=="default"){col <- paste0(col_pal,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
 
   panel_row <- length(genes)
