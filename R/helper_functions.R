@@ -2,7 +2,7 @@ require(scales)
 require(raster)
 #MAIN Violin plot function
 #---------------
-violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
+violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
                     pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
   if(gene %in% rownames(data@assays[[assay]]@data) ){
     feat <- data@assays[[assay]]@data[gene,]
@@ -19,10 +19,9 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
   lines(c(n+.6,n+.6),c(0,my_max),col="white",lwd=6,xpd=T)
   mtext(side = 2, text = ylab, line = 2,las=3)
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
-  col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
-  col_pal <- col_pal[as.factor(sort(unique(data@meta.data[,clustering])))]
+  col <- col[as.factor(sort(unique(data@meta.data[,clustering])))]
 
-  if(col=="default"){col <- paste0(col_pal,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
+  if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
 
   for(i in 1:length(unique(data@meta.data[,clustering]))){
     cl <- sort(unique(data@meta.data[,clustering]))[i]
@@ -54,15 +53,13 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
 
 #MAIN Violin plot function
 #---------------
-violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col="default",
-                    pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
+violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",
+                    pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
   n <- length(unique(data@meta.data[,clustering]))
   plot(c(.4,n+.6),c(-1,-1), ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main="",xaxt = "n",yaxt = "n",cex.main=cex.main)
 
-  #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
-  col_pal <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
-  col_pal <- col_pal[as.factor(sort(unique(data@meta.data[,clustering])))]
-  if(col=="default"){col <- paste0(col_pal,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
+  col <- col[as.factor(sort(unique(data@meta.data[,clustering])))]
+  if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
 
   panel_row <- length(genes)
   for(gene in genes){
@@ -146,7 +143,7 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
     ys <- c(d1$x,d2$x)
     xs <- c(d1$y,d2$y)*bw
   }
-  ulim <- max(quantile(x,1),0.015)
+  ulim <- max(max(x),0.015)
   llim <- max(min(x),-0.1)
   polygon( c(xs[ys<ulim & ys>llim] , -rev(xs[ys<ulim& ys>llim]) )+at,
            c(ys[ys<ulim & ys>llim]+base, rev(ys[ys<ulim& ys>llim])+base) ,col = col,border = border)
