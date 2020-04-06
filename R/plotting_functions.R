@@ -10,14 +10,16 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 
   if(feat %in% rownames(x@assays[[assay]]@data) ){
     feat <- x@assays[[assay]]@data[feat,]
-  } else if(feat %in% colnames(x@meta.data) ) { feat <- as.numeric(x@meta.data[,feat]  )
+  } else if(feat %in% colnames(x@meta.data) ) { feat <- as.numeric(x@meta.data[,feat])
   } else { message("Feature or metadata not found!!") }
 
-  if(is.null(mins)){mins <- min(feat)}
+  if(is.null(mins)){mins <- min(feat,na.rm = T)}
+  if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- 0 }
 
-  feat <- (feat - mins)/ ( sort(feat,T)[ min(10,sum(feat!=0))  ] - mins)
+  feat <- (feat - mins)/ ( sort(feat,T,na.last = T)[ min(10,sum(feat!=0,na.rm = T))  ] - mins)
+  print(feat)
   feat[feat > 1] <- 1
-  o <- order(feat)
+  o <- order(feat,na.last = T)
 
   pal <- c( col[1],colorRampPalette(col[-1])(10))[round(feat*9)+1][o]
   #par(mar=c(1.5,1.5,1.5,1.5))
