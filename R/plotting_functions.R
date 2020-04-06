@@ -17,7 +17,6 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
   if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- 0 }
 
   feat <- (feat - mins)/ ( sort(feat,T,na.last = T)[ min(10,sum(feat!=0,na.rm = T))  ] - mins)
-  print(feat)
   feat[feat > 1] <- 1
   o <- order(feat,na.last = T)
 
