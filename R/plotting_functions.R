@@ -33,14 +33,11 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 
   #compute density and centroids
   if(!is.null(label) ){
-    dens <- compute_density(x@reductions[[red]]@cell.embeddings[,dims],nbin=nbin)
-    centroids <-  sapply( unique(label) ,
+    centroids <-  sapply( unique(as.character(x@meta.data[,as.character(label)])) ,
                           red=x@reductions[[red]]@cell.embeddings[,dims],
-                          cl1=as.character(label),
-                          function(jj,red,cl1) { apply( red[cl1==jj,],2,
-                             function(ii) {ndens <- dens[cl1==jj]
-                             weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
-    colnames(centroids) <- unique(label)}
+                          cl1=x@meta.data[,as.character(label)],
+                          function(jj,red,cl1) { apply( red[cl1==jj,],2,pmean)  })
+  }
 
   #adds points
   points(x@reductions[[red]]@cell.embeddings[o,dims],pch=pch,cex=cex,bg=bg, col=paste0(pal) )
@@ -77,9 +74,11 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2), 
 
   #compute density and centroids
   if(label | add_lines){
-    dens <- compute_density(x@reductions[[red]]@cell.embeddings[,dims],nbin=nbin)
-    centroids <-  sapply( as.character(levels(feat)) , reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), cl1=feat, function(jj,reds,cl1) { apply( reds[cl1==jj,],2,function(ii) {ndens <- dens[cl1==jj];weighted.median(x = ii,w = 1/(1.1-ndens/(max(ndens))) )} )  })
-    colnames(centroids) <- levels(feat)}
+    centroids <-  sapply( as.character(levels(feat)) , 
+                          reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), 
+                          cl1=feat, function(jj,reds,cl1) { 
+                            apply( reds[cl1==jj,],2,pmean )  })
+    }
 
   if(add_lines){
     add_centroid_lines(x@reductions[[red]]@cell.embeddings[,dims],feat,col,centroids)}
@@ -149,4 +148,13 @@ plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
 }
 
 
+
+pmean <- function(x, steps=10, minf=.6){
+  f <- 1
+  for(i in 1:steps){
+    dx <-  x - mm
+    ind <- order( abs(dx) ) [ 1:ceiling(length(x) * max(minf,f) )]
+    mm <- mean(x[ind])
+    f <- f - .1 }
+  return( mm ) }
 
