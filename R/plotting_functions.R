@@ -151,6 +151,7 @@ plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
 
 pmean <- function(x, steps=10, minf=.6){
   f <- 1
+  mm <- mean(x)
   for(i in 1:steps){
     dx <-  x - mm
     ind <- order( abs(dx) ) [ 1:ceiling(length(x) * max(minf,f) )]
