@@ -33,9 +33,12 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 
   #compute density and centroids
   if(!is.null(label) ){
-    centroids <-  sapply( unique(as.character(x@meta.data[,as.character(label)])) ,
+    labels <- factor(as.character(x@meta.data[[as.character(label)]]))
+    if( !is.na(sum(as.numeric(levels(feat)))) ){
+      labels <- factor(as.numeric(as.character(x@meta.data[[as.character(label)]])))}
+    centroids <-  sapply( as.character(levels(labels)) ,
                           red=x@reductions[[red]]@cell.embeddings[,dims],
-                          cl1=x@meta.data[,as.character(label)],
+                          cl1=labels,
                           function(jj,red,cl1) { apply( red[cl1==jj,],2,pmean)  })
   }
 
@@ -45,9 +48,8 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
 
   #adds labels
   if(!is.null(label)){
-    label <- factor(x@meta.data[[label]])
     points(centroids[1,],centroids[2,],col="#ffffff90",pch=16,cex=2)
-    text(centroids[1,],centroids[2,],labels = levels(label))
+    text(centroids[1,],centroids[2,],labels = levels(labels))
   }
 }
 
@@ -58,9 +60,9 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2), 
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,...){
   fn <- feat
   feat <- factor(as.character(x@meta.data[[feat]]))
-  # if( !is.na(sum(as.numeric(levels(feat)))) ){
-  #   levels(feat) <- levels(feat) [ order(as.numeric(levels(feat))) ] }
-  try(col <- colorRampPalette(col)(length(col)))
+  if( !is.na(sum(as.numeric(levels(feat)))) ){
+    feat <- factor(as.numeric(as.character(x@meta.data[[fn]])))}
+  try(col <- colorRampPalette(col)( max( length(col) , length(unique(feat))) ))
   col <- col[feat]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
