@@ -24,11 +24,11 @@ linestretch: 1.5
 link-citations: yes
 linkcolor: blue
 csl: nature.csl
+cslreferences: nature.csl
 bibliography: refs.bib
 editor_options: 
   chunk_output_type: inline
 ---
-
 \footnotetext[1]{University of Nowhere}
 \footnotetext[2]{University of Somewhere}
 \footnotetext[3]{University of Lalaland}
@@ -36,6 +36,7 @@ editor_options:
 
 
 ```{r Setup..., message=FALSE, warning=FALSE, include=FALSE}
+options(tinytex.verbose = TRUE)
 knitr::opts_chunk$set(fig.pos = 'p') # Places figures on their own pages
 knitr::opts_chunk$set(out.width = '100%', dpi=300)
 
@@ -47,7 +48,7 @@ library(ggplot2)
 library(ggthemes)
 library(dplyr)
 library(stringr)
-source('plotting_functions.R')
+source("../R/add_fig_label.R")
 ```
 
 

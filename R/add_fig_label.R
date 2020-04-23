@@ -1,19 +1,22 @@
 
 
-add_letter <- function(label, cex=2, font=2,...) {
+add_letter <- function(label="", cex=2, font=2, plot=T,...) {
   totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])
   totx <- par("usr")[1] - ( (par("usr")[2] - par("usr")[1]) * par("mai")[2] / totx )
   
   toty <- (par("fin")[2] - par("mai")[1] - par("mai")[3])
   toty <- par("usr")[4] + ( (par("usr")[4] - par("usr")[3]) * par("mai")[3] / toty )
   
-  
-  sw <- strwidth(label[1], cex=cex) * 60/100
-  sh <- strheight(LETTERS[1], cex=cex) * 60/100
-  
-  text(label[1], x=totx+sw, y=toty-sh, xpd=T, cex=cex, font=font,...)
+  if(plot){
+    sw <- strwidth(label[1], cex=cex) * 60/100
+    sh <- strheight(LETTERS[1], cex=cex) * 60/100
+    
+    text(label[1], x=totx+sw, y=toty-sh, xpd=T, cex=cex, font=font,...)
+    # mtext( text = label[1], at = c(totx+sw, toty-sh), cex=cex, font=font, ... )
+  } else{
+    return(c(totx,toty))
+  }
 }
-
 
 
 

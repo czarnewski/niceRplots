@@ -5,7 +5,7 @@ require(RColorBrewer)
 require(MASS)
 require(spatstat)
 
-plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,col=c("grey90","grey80","royalblue","navy","navy"),...){
+plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA,cex=.3,dims=c(1,2),mins=0,add_graph=NULL,percent_connections=1,nbin=400,main=NULL,col=c("grey90","grey80","grey70","navy","black"),...){
   fn <- feat
 
   if(feat %in% rownames(x@assays[[assay]]@data) ){
@@ -39,7 +39,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,bg=NA
     centroids <-  sapply( as.character(levels(labels)) ,
                           red=x@reductions[[red]]@cell.embeddings[,dims],
                           cl1=labels,
-                          function(jj,red,cl1) { apply( red[cl1==jj,],2,pmean)  })
+                          function(jj,red,cl1) { pmean(reds[cl1==jj,])  })
   }
 
   #adds points
@@ -78,8 +78,7 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2), 
   if(label | add_lines){
     centroids <-  sapply( as.character(levels(feat)) , 
                           reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), 
-                          cl1=feat, function(jj,reds,cl1) { 
-                            apply( reds[cl1==jj,],2,pmean )  })
+                          cl1=feat, function(jj,reds,cl1) { pmean(reds[cl1==jj,])  })
     }
 
   if(add_lines){
@@ -153,11 +152,30 @@ plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
 
 pmean <- function(x, steps=10, minf=.6){
   f <- 1
-  mm <- mean(x)
   for(i in 1:steps){
-    dx <-  x - mm
-    ind <- order( abs(dx) ) [ 1:ceiling(length(x) * max(minf,f) )]
-    mm <- mean(x[ind])
+    if(is.vector(x)){
+      mm <- mean(x)
+      dx <-  x - mm
+      ind <- order( abs(dx) ) [ 1:ceiling(length(x) * max(minf,f) )]
+      mm <- mean(x[ind])
+    } else {
+      mm <- colMeans(x)
+      dx <- ( colSums( (t(x)-mm )^2 ) ) ^ (1/2)
+      ind <- order( abs(dx) ) [ 1:ceiling(nrow(x) * max(minf,f) )]
+      mm <- colMeans( x[ ind , ] )
+    }
     f <- f - .1 }
   return( mm ) }
+
+
+
+
+
+
+
+
+levels(a$cluster_use)
+order(levels(a$cluster_use))
+
+
 

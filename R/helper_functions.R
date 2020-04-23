@@ -166,7 +166,7 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 #Function to plot dot gene averages
 #---------------
 plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","blue3","navy"),main="",
-                      srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T){
+                      srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
   
   temp <- factor(as.character(data@meta.data[,clustering]))
   if( !is.na(sum(as.numeric(levels(temp)))) ){
@@ -181,7 +181,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","blue3","
 
 
   plot(0,0,type="n",las=1,xlim=c(.5,ncol(x1)+.5),ylim=c(.5,nrow(x1)+.5),
-       axes=F,ylab="",xlab="",main=main,xaxs="i",yaxs="i")
+       axes=F,ylab="",xlab="",main=main,xaxs="i",yaxs="i",...)
 
   if(show_grid){
     for(i in 1:length(levels(temp) )){
@@ -284,8 +284,8 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
     temp <- factor(as.numeric(as.character(data@meta.data[,clustering]))) }
   
   o <- order(temp)
-  barplot( feat[o] , col=col [ temp ], 
-           border= col[ temp], 
+  barplot( feat[o] , col=col [ temp[o] ], 
+           border= col[ temp[o]], 
            names.arg="" , las=1, xaxs="i", yaxs="i",
            ylim=c( min(c(feat,0))*1.2, max(c(feat,0))*1.2 ),...)
   lines( c(0,length(feat)*1.2-.5), c(min(c(feat,0))*1.2,min(c(feat,0))*1.2),xpd=T ) ; par(xpd=F)
@@ -299,10 +299,14 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
 
 ###Gene expression barplots 
 #---------------
-barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,
-                    pt.col="grey",assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
+barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,labels=NULL,
+                    pt.col="grey",assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
+  
   n <- length(unique(data@meta.data[,clustering]))
-  plot(c(0,length(x)*1.2-.5),c(-1,-1), ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main="",xaxt = "n",yaxt = "n",cex.main=cex.main)
+  plot(c(0,ncol(data)*1.2-.5),c(-1,-1),
+       ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",
+       xaxs="i",las=1,xlab="",main=main,xaxt = "n",yaxt = "n",
+       cex.main=cex.main,font.main=font.main)
   
   col <- col[as.factor(sort(unique(data@meta.data[,clustering])))]
   if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
@@ -353,10 +357,11 @@ barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,
   
   # mtext(at = (length(genes):1)-.5 , side = 2, text = genes, las=1 , cex = cex.axis/2)
   # mtext(at = (cumsum(table(data@meta.data[o,clustering])) - (table(data@meta.data[o,clustering])/2))*1.2 - .5 , side = 2, text = genes, las=1 )
+  if(!is.null(labels)){ genes <- labels  }
   text( par("usr")[1] - (par("usr")[2])/200 , (length(genes):1)-.5, labels = genes,
         srt = 0, adj = c(1,.5), xpd = T, cex=cex.axis)
   
-  text( (cumsum(table(temp)) - (table(temp)/2))*1.2 - .5 , par("usr")[3], 
+  text( (cumsum(table(temp))*1.2 - .5)  - ((table(temp)/2)*1.2 - .5 ), par("usr")[3], 
         labels = sort(unique(temp)), srt = 0, adj = c(.5,1.5), xpd = T, cex=cex.axis)
   
 }
@@ -365,3 +370,14 @@ barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,
 
 
 
+getcluster <- function(a, gene, clustering, lowest=F){
+  temp <- a@assays$RNA@data[gene,]
+  temp <- sapply(unique(as.character(a@meta.data[,clustering])),function(x){
+    mean( temp[ a@meta.data[,clustering] == x ])
+  })
+  if(lowest){
+    return( as.character(unique(a@meta.data[,clustering]))[which.min(temp)] )
+  } else {
+    return( as.character(unique(a@meta.data[,clustering]))[which.max(temp)] )
+  }
+} 
