@@ -1,31 +1,47 @@
 require(scales)
-require(raster)
+
+
 #MAIN Violin plot function
 #---------------
-violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
+violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=T,transparency=NULL,plot_x_axis=T,smooth=.1,method="log",points_method="proportional",col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
                     pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",srt=0,ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
-  if(gene %in% rownames(data@assays[[assay]]@data) ){
-    feat <- data@assays[[assay]]@data[gene,]
-  } else if(gene %in% colnames(data@meta.data) ) {
-    feat <- data@meta.data[, gene]
-  } else { message("Feature or metadata not found!!") }
   
-  temp <- factor(as.character(data@meta.data[,clustering]))
+  
+  if( is(object = data,"Seurat") ){
+    if(gene %in% rownames(data@assays[[assay]]@data) ){
+      feat <- data@assays[[assay]]@data[gene,]
+    } else if(gene %in% colnames(data@meta.data) ) {
+      feat <- data@meta.data[, gene]
+    } else { message("Feature or metadata not found!!") }
+    temp <- factor(as.character(data@meta.data[,clustering]))
+    N <- ncol(data)
+  } else {
+    feat <- c(as.matrix(data))
+    temp <- factor(c(sapply(colnames(data),function(x){rep(x,nrow(data))})),levels = colnames(data))
+    N <- nrow(data)
+  }
+
+  pt.col=rep( pt.col,N)[1:N]
+  pt.cex=rep(pt.cex,N)[1:N]
+  pt.pch=rep(pt.pch,N)[1:N]
+  
   if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(data@meta.data[,clustering]))) }
+    temp <- factor(as.numeric(as.character(temp))) }
   
   #par(mar=c(2,3,2,1))
   n <- length(levels(temp))
+  print(levels(temp))
   my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
 
-  plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main=main,xaxt = "n",cex.main=cex.main)
+  plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,
+       yaxs="i",xaxs="i",las=1,xlab="",main=main,xaxt = "n",cex.main=cex.main)
   lines(c(0,n+.6),c(my_max,my_max),col="white",lwd=6,xpd=T)
   lines(c(n+.6,n+.6),c(0,my_max),col="white",lwd=6,xpd=T)
   mtext(side = 2, text = ylab, line = 2,las=3)
   #col_pal <- hue_pal()(length(unique(data@meta.data[,clustering])))
   col <- col[1:n]
 
-  if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, n )}
+  if(col[1]=="default"){col <- paste0(col,95)} else { col <- rep(col, n )}
 
   for(i in 1:n){
     cl <- levels(temp)[i]
@@ -34,7 +50,12 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
       #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
     #}
     x <- na.omit(feat[temp == cl])
-    suppressWarnings(suppressMessages( try(draw_violin(x, at = i,base=0.0,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
+    suppressWarnings(suppressMessages( try(draw_violin(x, at = i,base=0.0,col = col[i],
+                                                       smooth=smooth,
+                                                       plot_points=plot_points,
+                                                       method=method,
+                                                       points_method=points_method,
+                                                       transparency=transparency,
                bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col,pt.cex=pt.cex,pt.pch=pt.pch)) ))
     #paste0(col_pal[i])
     #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
@@ -44,7 +65,7 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
   abline(h=-.1,v=.4,xpd=F,lwd=2)
   if(plot_x_axis){
     # axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
-    text( 1:n, par("usr")[3] - (par("usr")[4])/50, labels = levels(temp), srt = srt, adj = c(.5+srt/180,1-srt/180), xpd = T, cex=cex.axis)
+    text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
   }
   # if(plot_y_axis){
   #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
@@ -58,40 +79,69 @@ violins <- function(data, gene, clustering, plot_points=T,plot_y_axis=T,plot_x_a
 
 #MAIN Violin plot function
 #---------------
-violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=2,method="log",points_method="uniform",srt=0,
-                    pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
-  n <- length(unique(data@meta.data[,clustering]))
+violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.5,method="log",points_method="proportional",srt=0,transparency=NULL,
+                    pt.col="grey",
+                    pt.cex=.5,
+                    pt.pch=16,
+                    bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
+  
+  if(is(data,"Seurat")){ 
+    data <- data@assays[[assay]]@data[genes,]
+    grouping <- data@meta.data[,clustering]
+  } else {grouping <- factor(clustering)}
+  
+  
+  n <- length(unique(grouping))
+  N <- ncol(data)
+  pt.col=rep( pt.col,N)[1:N]
+  pt.cex=rep(pt.cex,N)[1:N]
+  pt.pch=rep(pt.pch,N)[1:N]
+  
+  
+  
   plot(c(.4,n+.6),c(-1,-1), ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main="",xaxt = "n",yaxt = "n",cex.main=cex.main)
 
-  col <- col[as.factor(sort(unique(data@meta.data[,clustering])))]
-  if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
-  
-  temp <- factor(as.character(data@meta.data[,clustering]))
+  col <- colorRampPalette(col)(length(col))
+  col <- col[as.factor(sort(unique(grouping)))]
+
+  temp <- factor(as.character(grouping))
   if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(data@meta.data[,clustering]))) }
+    temp <- factor(as.numeric(as.character(grouping))) }
 
   panel_row <- length(genes)
   for(gene in genes){
     panel_row <- panel_row - 1
 
-    if(gene %in% rownames(data@assays[[assay]]@data) ){
-      feat <- data@assays[[assay]]@data[gene,]
+    if(gene %in% rownames(data) ){
+      feat <- data[gene,]
     } else if(gene %in% colnames(data@meta.data) ) {
       feat <- data@meta.data[, gene]
     } else { message("Feature or metadata not found!!") }
 
     #par(mar=c(2,3,2,1))
     my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
+    # message(paste0("feat:",gene,"\tmax:",my_max,"\tmin:",panel_row+.02,"\tdatamax:",max(feat),"\tdatamin:",min(feat)))
 
     for(i in 1:length(levels(temp))){
       cl <- levels(temp)[i]
       #if(plot_points){
-      #points(runif(sum(DATA@meta.data[,clustering] == cl),min = i-.4,max = i+.4),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey40")
-      #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
+      #points(runif(sum(grouping == cl),min = i-.4,max = i+.4),DATA@data[gene,grouping == cl],cex=.3,pch=16,col="grey40")
+      #points(rnorm(sum(grouping == cl),mean = i,sd = .12),DATA@data[gene,grouping == cl],cex=.3,pch=16,col="grey60")
       #}
       x <- na.omit(feat[temp == cl]) / my_max
-      suppressWarnings(suppressMessages( try(draw_violin(x, base=panel_row+.02,at = i,col = col[i], smooth=smooth,plot_points=plot_points,method=method,points_method=points_method,
-                                                         bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col,pt.cex=pt.cex,pt.pch=pt.pch)) ))
+      
+      suppressWarnings(suppressMessages( try(draw_violin(x, base=panel_row+.02,at = i,col = col[i], 
+                                                         smooth=smooth,
+                                                         plot_points=plot_points,
+                                                         method=method,
+                                                         points_method=points_method,
+                                                         bw = bw,
+                                                         border =  "grey20",
+                                                         max_points=max_points,
+                                                         pt.col=pt.col[temp == cl],
+                                                         pt.cex=pt.cex[temp == cl],
+                                                         pt.pch=pt.pch[temp == cl],
+                                                         transparency=transparency)) ))
       #paste0(col_pal[i])
       #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
       #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
@@ -108,13 +158,13 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   lines(c(n+.6,n+.6),c(0,length(genes)),col="white",lwd=6,xpd=T)
   abline(h=-.1,v=.4,xpd=F,lwd=2)
   # if(plot_x_axis){
-  #   axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
+  #   axis(1, at=1:n, labels=sort(unique(grouping)),cex.axis=cex.axis)
   # }
 
   # mtext(at = (length(genes):1)-.5 , side = 2, text = genes, las=1 )
   text( par("usr")[1] - (par("usr")[2])/200 , (length(genes):1)-.5, labels = genes,
         srt = 0, adj = c(1,.5), xpd = T, cex=cex.axis)
-  text( 1:n, par("usr")[3] - (par("usr")[4])/50, labels = levels(temp), srt = srt, adj = c(.5+srt/180,1-srt/180), xpd = T, cex=cex.axis)
+  text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
 
 }
 #---------------
@@ -125,11 +175,15 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
 #Function to calculate violin density
 #---------------
 draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",
-                        border="grey",at=1,pt.col="grey",pt.cex=0.5,pt.pch=16,bw=0.45,max_points=200){
+                        border="grey",at=1,pt.col="grey",pt.cex=0.5,pt.pch=16,bw=0.45,max_points=200,transparency=NULL){
   r <- sum(x!=0)/length(x)
   if(plot_points){
-    if(points_method == "proportional"){points(rnorm(length(x),mean = at,r/5),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
-    if(points_method == "uniform"){points(rnorm(length(x),mean = at,sd = .12),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
+    if(points_method == "proportional"){
+      set.seed(1)
+      points(rnorm(length(x),mean = at,sd = .12),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
+    if(points_method == "uniform"){
+      set.seed(1)
+      points(runif(length(x),min = at-.4,max = at+.4),x+base,cex=pt.cex,col=pt.col,pch=pt.pch)}
   }
 
   if(method == "uniform"){
@@ -156,7 +210,9 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
   ulim <- max(max(x),0.015)
   llim <- max(min(x),-0.1)
   polygon( c(xs[ys<ulim & ys>llim] , -rev(xs[ys<ulim& ys>llim]) )+at,
-           c(ys[ys<ulim & ys>llim]+base, rev(ys[ys<ulim& ys>llim])+base) ,col = col,border = border)
+           c(ys[ys<ulim & ys>llim]+base, rev(ys[ys<ulim& ys>llim])+base) ,
+           col = ifelse(is.null(transparency) , col, paste0(col,transparency) ),
+           border = border)
 }
 #---------------
 
@@ -165,18 +221,24 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 
 #Function to plot dot gene averages
 #---------------
-plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","blue3","navy"),main="",
+plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),main="",
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
   
-  temp <- factor(as.character(data@meta.data[,clustering]))
-  if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(data@meta.data[,clustering]))) }
+  if(is(data,"Seurat")){ 
+    data <- data@assays[[assay]]@data[genes,]
+    grouping <- data@meta.data[,clustering]
+  } else {grouping <- factor(clustering)}
   
-  x1 <- rowsum(t(as.matrix(data@assays$RNA@data[rev(genes),])), temp)
+  
+  temp <- factor(as.character(grouping))
+  if( !is.na(sum(as.numeric(levels(temp)))) ){
+    temp <- factor(as.numeric(as.character(grouping))) }
+  
+  x1 <- rowsum(t(as.matrix(data[rev(genes),])), temp)
   x1 <- t(x1 / c(table(temp)))
   x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
 
-  x2 <- rowsum(( t (as.matrix(data@assays$RNA@data[rev(genes),]!=0)) *1), temp)
+  x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
   x2 <- t(x2 / c(table(temp)))
 
 
@@ -195,8 +257,10 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","blue3","
   points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
          pch=16, col=c( "grey95",colorRampPalette(pal)(19))[c(t(x1) )*18+1 ],xpd=T)
 
-  text(1:ncol(x1), par("usr")[3] - (par("usr")[4])/50, labels = colnames(x1), srt = srt, adj = c(.5+srt/180,1-srt/180), xpd = TRUE, cex=cex.row)
-  text(par("usr")[1] - (par("usr")[2])/200, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.col)
+  text(1:ncol(x1), par("usr")[3] - (par("usr")[4])/200, labels = colnames(x1), srt = srt, 
+       adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),
+       xpd = TRUE, cex=cex.col)
+  text(par("usr")[1] - (par("usr")[2])/200, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
   
   if(show_axis){
     lines(c(.5,.5),c(.5,nrow(x1)+.5),col="black",lwd=1,xpd=T)
@@ -211,7 +275,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","blue3","
 
 #Heatmap plot
 #---------------
-plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=colorRampPalette(c("purple4","black","black","yellow4","yellow1") )(90),...){
+plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=c("grey90",colorRampPalette(c("grey80","navy","navy") )(90)),...){
   plot(0,type="n",ylim=c(0,1.105),xlim=c(0,1.25),col="white",axes=F,asp=F,main=main,xlab="",ylab="")
 
   if(!is.null(annot)){
@@ -252,16 +316,16 @@ plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
   # plot(annnn,col=hue_pal()(length(levels(data$Tissue) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
   #
   if(!is.null(order_metadata)){
-    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) scale(x,T,T)))[,order(data@meta.data[,order_metadata])]
+    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))[,order(data@meta.data[,order_metadata])]
   } else {
-    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) scale(x,T,T)))[,order(data$cell_tissue_donor_plate)]
+    teeeeest <- t(apply(data@assays$RNA@data[genes,] , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))
   }
   teeeeest[teeeeest > 2]  <- cut_max
   teeeeest[teeeeest < -2] <- cut_max
   #teeeeest <- t(apply(teeeeest , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))
   #teeeeest[,1000] <- NA
   plot(raster(teeeeest),col= heat_color,asp=F,axes=F,add=T,interpolate=F,...)
-  text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex,add=T)
+  text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex)
 
 }
 #---------------
@@ -299,47 +363,82 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
 
 ###Gene expression barplots 
 #---------------
-barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,labels=NULL,
-                    pt.col="grey",assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
+barlist <- function(data, genes, clustering, plot_y_axis=T,plot_x_axis=T,labels=NULL,srt=0,orderby = NULL,
+                    assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,
+                    col = "default",draw_mean_lines=T,...){
   
-  n <- length(unique(data@meta.data[,clustering]))
+  if(is(data,"Seurat")){ 
+    data <- data@assays[[assay]]@data[genes,]
+    grouping <- data@meta.data[,clustering]
+  } else {grouping <- factor(clustering)}
+  
+  n <- length(unique(grouping))
   plot(c(0,ncol(data)*1.2-.5),c(-1,-1),
        ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",
        xaxs="i",las=1,xlab="",main=main,xaxt = "n",yaxt = "n",
        cex.main=cex.main,font.main=font.main)
   
-  col <- col[as.factor(sort(unique(data@meta.data[,clustering])))]
-  if(col=="default"){col <- paste0(col,95)} else { col <- rep(col, length(unique(data@meta.data[,clustering])) )}
   
-  temp <- factor(as.character(data@meta.data[,clustering]))
+  
+  temp <- factor(as.character(grouping))
   if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(data@meta.data[,clustering]))) }
+    temp <- factor(as.numeric(as.character(grouping))) }
   o <- order(temp)
+  
+
+  if(!is.null(orderby)){
+    if(orderby %in% rownames(data) ){
+      feat <- data[orderby,]
+    } else if( is(data,"Seurat") ) {
+      if(orderby %in% colnames(data@meta.data) ) {
+        feat <- data@meta.data[, orderby]} else { message("Feature or metadata not found!!") }
+    } else { message("Feature or metadata not found!!") }
+    
+    for(i in levels(temp)){
+      o[temp[o] == i] <- o[temp[o] == i][order(feat[o][temp[o] == i],decreasing = F)]
+    }
+  }
+  
+  
+  if(col[1]=="default"){
+    col <- c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") )
+    col <- col [ temp[o] ]
+  } else if( length(col) == ncol(data) ){
+    col <- rep(col, ncol(data))[1:ncol(data)]
+    col <- col[o]
+  } else {
+    col <- col [ temp[o] ]
+  }
   
   panel_row <- length(genes)
   for(gene in genes){
     panel_row <- panel_row - 1
     
-    if(gene %in% rownames(data@assays[[assay]]@data) ){
-      feat <- data@assays[[assay]]@data[gene,]
-    } else if(gene %in% colnames(data@meta.data) ) {
-      feat <- data@meta.data[, gene]
+    if(gene %in% rownames(data) ){
+      feat <- data[gene,]
+    } else if( is(data,"Seurat") ) {
+      if(gene %in% colnames(data@meta.data) ) {
+      feat <- data@meta.data[, gene]} else { message("Feature or metadata not found!!") }
     } else { message("Feature or metadata not found!!") }
     
     #par(mar=c(2,3,2,1))
     my_max <- max(c(feat,.00000001),na.rm = T)*1.1
     x <- (na.omit(feat) / my_max)
-    barplot( x[o] , col=col [ temp[o] ], axes=F,
-             border= col[ temp[o]], 
+    barplot( x[o] , col=col, axes=F,
+             border= col, 
              names.arg="" , las=1, xaxs="i", yaxs="i",offset = panel_row,
              ylim=c( 0 , length(genes) ),
              add=T,xpd=F,...)
-    mmm <- sapply(as.character(unique(temp[o])),
-                  function(i) mean( x [temp == i]))
-    lines((1:length(x))*1.2-.5,
-          mmm[match(temp[o],
-                    as.character(unique(temp[o])))]+panel_row,lwd=2)
+    if(draw_mean_lines){
+      mmm <- sapply(as.character(unique(temp[o])),
+                    function(i) mean( x [temp == i]))
+      lines((1:length(x))*1.2-.5,
+            mmm[match(temp[o],
+                      as.character(unique(temp[o])))]+panel_row,lwd=2)
+    }
     
+    lines(c(0,0),c(panel_row,panel_row+.9),xpd=F,lwd=2)
+    lines(c(0, length(x)*1.2-.5 ),c(panel_row,panel_row),xpd=F,lwd=2)
     
     # if(plot_y_axis){
     #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
@@ -350,9 +449,9 @@ barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,labels=N
   
   # lines(c(0,n+.6),c(length(genes),length(genes)),col="white",lwd=6,xpd=T)
   # lines(c(n+.6,n+.6),c(0,length(genes)),col="white",lwd=6,xpd=T)
-  abline(h=0,v=0,xpd=F,lwd=2)
+  # abline(h=0,v=0,xpd=F,lwd=2)
   # if(plot_x_axis){
-  #   axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
+  #   axis(1, at=1:n, labels=sort(unique(grouping)),cex.axis=cex.axis)
   # }
   
   # mtext(at = (length(genes):1)-.5 , side = 2, text = genes, las=1 , cex = cex.axis/2)
@@ -362,7 +461,7 @@ barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,labels=N
         srt = 0, adj = c(1,.5), xpd = T, cex=cex.axis)
   
   text( (cumsum(table(temp))*1.2 - .5)  - ((table(temp)/2)*1.2 - .5 ), par("usr")[3], 
-        labels = sort(unique(temp)), srt = 0, adj = c(.5,1.5), xpd = T, cex=cex.axis)
+        labels = sort(unique(temp)), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
   
 }
 #---------------
@@ -370,14 +469,151 @@ barlist <- function(data, genes, clustering,plot_y_axis=T,plot_x_axis=T,labels=N
 
 
 
-getcluster <- function(a, gene, clustering, lowest=F){
-  temp <- a@assays$RNA@data[gene,]
-  temp <- sapply(unique(as.character(a@meta.data[,clustering])),function(x){
-    mean( temp[ a@meta.data[,clustering] == x ])
+getcluster <- function(data, gene, clustering, lowest=F){
+  
+  if(is(data,"Seurat")){ 
+    data <- data@assays[[assay]]@data[genes,]
+    grouping <- data@meta.data[,clustering]
+  } else {
+    grouping <- clustering
+  }
+  
+  data <- sapply(unique(as.character(grouping)),function(x){
+    mean( data[ gene , as.character(grouping) == x ])
   })
   if(lowest){
-    return( as.character(unique(a@meta.data[,clustering]))[which.min(temp)] )
+    return( unique(as.character(grouping))[which.min(data)] )
   } else {
-    return( as.character(unique(a@meta.data[,clustering]))[which.max(temp)] )
+    return( unique(as.character(grouping))[which.max(data)] )
   }
-} 
+}
+
+
+
+
+pointcluster <- function(a, gene, clustering, red="umap", cex=3,col="black",lowest=F){
+  clust_use <- getcluster(a,gene,clustering,lowest)
+  points(t(pmean(a@reductions[[red]]@cell.embeddings[a@meta.data[,clustering] == clust_use,])) ,
+         pch=1, cex=cex, xpd=T,col=col)
+}
+
+
+
+
+add_annotation_percentages <- function(data,annotation_file,
+                                       annotation_column_use="external_gene_name",
+                                       annotation_column_target="gene_biotype",assay="RNA"){
+  item <- annot[match(rownames(data@assays[[assay]]@counts), annot[, annotation_column_use]), annotation_column_target]
+  item[is.na(item)] <- "unknown"
+  
+  data@meta.data <- data@meta.data[, !(colnames(data@meta.data) %in% annotation_column_target)]
+  data@assays[[assay]]@meta.features <- 
+  
+  # Calculate the percentage of each gene biotype
+  perc <- rowsum(as.matrix(data@assays[[assay]]@counts), group = item)
+  perc <- ( t(perc) / Matrix::colSums(data@assays[[assay]]@counts) )
+  o <- order(apply(perc, 2, mean), decreasing = FALSE)
+  perc <- perc[, o]
+  print(dim(perc))
+  
+  # Add table to the object
+  annot_table <-
+    setNames(as.data.frame((perc*100)[, names(sort(table(item), decreasing = TRUE))]),
+             paste0("percent_", names(sort(table(item), decreasing = TRUE))))
+  data@meta.data <- data@meta.data[, !(colnames(data@meta.data) %in% colnames(annot_table))]
+  
+  data@meta.data <- cbind(
+    data@meta.data,
+    annot_table)
+  
+  return(data)
+}
+
+
+
+
+plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
+                        frame=F,axes=F,xlab="",ylab="", main=NULL,...){
+  rnk <- rank(-stats)
+  ord <- order(rnk)
+  statsAdj <- stats[ord]
+  statsAdj <- sign(statsAdj) * (abs(statsAdj)^1)
+  statsAdj <- statsAdj/max(abs(statsAdj))
+  
+  pathway <- gmt[[pathway_name]]
+  pathway <- sort(unname(as.vector(na.omit(match(pathway, names(statsAdj))))))
+  pathway <- sort(pathway)
+  gseaRes <- calcGseaStat(statsAdj, selectedStats = pathway, 
+                          returnAllExtremes = TRUE)
+  
+  bottoms <- gseaRes$bottoms
+  tops <- gseaRes$tops
+  n <- length(statsAdj)
+  xs <- as.vector(rbind(pathway - 1, pathway))
+  ys <- as.vector(rbind(bottoms, tops))
+  toPlot <- data.frame(x = c(0, xs, n + 1), y = c(0, ys, 0))
+  diff <- (max(tops) - min(bottoms))/8
+  
+  plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,
+       main=ifelse(is.null(main),pathway_name,main),
+       xlim=c(0,length(stats)),xaxs="i",yaxs="i",
+       ylim=c(min(toPlot$y),
+              max(toPlot$y)),
+       frame=frame,axes=axes,xlab=xlab,ylab=ylab,...)
+  points(x=pathway,y=rep(0,length(pathway)),pch=73,xpd=T)
+  lines(c(pathway[which.max(gseaRes$tops)],
+          pathway[which.max(gseaRes$tops)]),
+        c(0,gseaRes$res),lty=2,col="grey")
+  
+  if(!is.null(enrichment_table)){
+    text(length(stats),gseaRes$res,adj=c(1,1),
+         labels = paste0("p=",round(enrichment_table$pval[enrichment_table$pathway == pathway_name],5),
+                         "\nNES=",round(enrichment_table$NES[enrichment_table$pathway == pathway_name],3),
+                         "\nES=",round(enrichment_table$ES[enrichment_table$pathway == pathway_name],3) ) )
+  }
+  
+  lines( c(0,length(stats)), c(0,0),xpd=T,lwd=1 )
+  lines( c(0,0), c(0,max(toPlot$y)),xpd=T,lwd=1 )
+  text( length(stats)/2, min(toPlot$y) ,labels="gene rank",adj=c(.5,1.5),xpd=T)
+  text( 0, mean(range(toPlot$y)) ,labels="ES",srt=90,adj=c(.5,-.5),xpd=T)
+  
+}
+
+
+
+
+
+
+
+# CLUSTER DENDROGRAM
+# mypar(4,4)
+# cluster_means <- as.matrix(sapply(unique(cl$membership),function(x){
+#   rowMeans(microbiome[,cl$membership == x]) }))
+# colnames(cluster_means) <- unique(cl$membership)
+# d <- cor(cluster_means)
+# d [ !upper.tri(d) ] <- 0
+# image(d[nrow(d):1,] ,col=c("black",colorRampPalette(c("white", "grey80", "firebrick"))(90)),
+#       breaks=c(-1,-.0001,seq(0,1,length.out = 90)),frame=F,axes=F)
+# 
+# 
+# 
+# clusters_used <- c()
+# 
+# d <- cor(cluster_means)
+# d [ !upper.tri(d) ] <- 0
+# image(d[nrow(d):1,] ,col=c("black",colorRampPalette(c("white", "grey80", "firebrick"))(90)),
+#       breaks=c(-1,-.0001,seq(0,1,length.out = 90)),frame=F,axes=F)
+# 
+# d[which.max(d)] <- -1
+# image(d[nrow(d):1,] ,col=c("black",colorRampPalette(c("white", "grey80", "firebrick"))(90)),
+#       breaks=c(-1,-.0001,seq(0,1,length.out = 90)),frame=F,axes=F)
+# colN <- ceiling(which.max(d) / nrow(d))
+# rowN <- ifelse( (which.max(d) %% nrow(d)) == 0 , nrow(d), (which.max(d) %% nrow(d)) )
+# clusters_used <- c(clusters_used , colnames(cluster_means)[rowN] , colnames(cluster_means)[colN]) 
+# 
+# cluster_means <- cbind( cluster_means [,-c(colN,rowN)], rowMeans(cluster_means[,c(colN,rowN)]) )
+# colnames(cluster_means)[ncol(cluster_means)] <- paste0(rowN,"_",colN)
+# 
+# 
+
+

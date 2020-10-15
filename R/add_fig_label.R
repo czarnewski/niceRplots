@@ -21,6 +21,46 @@ add_letter <- function(label="", cex=2, font=2, plot=T,...) {
 
 
 
+add_arrow <- function(side=1, w=.05, l=.05, invert=F, plot=T,col = "black",...) {
+  totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])
+  xmin <- par("usr")[1] - ( (par("usr")[2] - par("usr")[1]) * par("mai")[2] / totx )
+  xmax <- par("usr")[2] + ( (par("usr")[2] - par("usr")[1]) * par("mai")[4] / totx )
+  xmean <- mean(par("usr")[1:2])
+  
+  toty <- (par("fin")[2] - par("mai")[1] - par("mai")[3])
+  ymin <- par("usr")[3] - ( (par("usr")[4] - par("usr")[3]) * par("mai")[1] / toty )
+  ymax <- par("usr")[4] + ( (par("usr")[4] - par("usr")[3]) * par("mai")[3] / toty )
+  ymean <- mean(par("usr")[3:4])
+  
+  if(plot){
+    xf <- diff(c(xmin,xmax))
+    yf <- diff(c(ymin,ymax))
+    if(side == 1){
+      xs <- c(xmean-w*xf,xmean+w*xf,xmean)
+      ys <- c(ymin,ymin,ymin+l*yf)
+    } else if(side == 2){
+      ys <- c(ymean-w*yf,ymean+w*yf,ymean)
+      xs <- c(xmin,xmin,xmin+l*xf)
+    } else if(side == 3){
+      xs <- c(xmean-w*xf,xmean+w*xf,xmean)
+      ys <- c(ymax,ymax,ymax-l*yf)
+    } else if(side == 4){
+      ys <- c(ymean-w*yf,ymean+w*yf,ymean)
+      xs <- c(xmax,xmax,xmax-l*xf)
+    }
+    polygon(xs,ys,col = col,xpd=T)
+  } 
+}
+
+
+
+
+
+
+
+
+
+
 
 fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   
