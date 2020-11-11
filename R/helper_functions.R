@@ -530,61 +530,10 @@ add_annotation_percentages <- function(data,annotation_file,
 }
 
 
-
-
-plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
-                        frame=F,axes=F,xlab="",ylab="", main=NULL,...){
-  rnk <- rank(-stats)
-  ord <- order(rnk)
-  statsAdj <- stats[ord]
-  statsAdj <- sign(statsAdj) * (abs(statsAdj)^1)
-  statsAdj <- statsAdj/max(abs(statsAdj))
-
-  pathway <- gmt[[pathway_name]]
-  pathway <- sort(unname(as.vector(na.omit(match(pathway, names(statsAdj))))))
-  pathway <- sort(pathway)
-  gseaRes <- calcGseaStat(statsAdj, selectedStats = pathway,
-                          returnAllExtremes = TRUE)
-
-  bottoms <- gseaRes$bottoms
-  tops <- gseaRes$tops
-  n <- length(statsAdj)
-  xs <- as.vector(rbind(pathway - 1, pathway))
-  ys <- as.vector(rbind(bottoms, tops))
-  toPlot <- data.frame(x = c(0, xs, n + 1), y = c(0, ys, 0))
-  diff <- (max(tops) - min(bottoms))/8
-
-  plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,
-       main=ifelse(is.null(main),pathway_name,main),
-       xlim=c(0,length(stats)),xaxs="i",yaxs="i",
-       ylim=c(min(toPlot$y),
-              max(toPlot$y)),
-       frame=frame,axes=axes,xlab=xlab,ylab=ylab,...)
-  points(x=pathway,y=rep(0,length(pathway)),pch=73,xpd=T)
-  lines(c(pathway[which.max(gseaRes$tops)],
-          pathway[which.max(gseaRes$tops)]),
-        c(0,gseaRes$res),lty=2,col="grey")
-
-  if(!is.null(enrichment_table)){
-    text(length(stats),gseaRes$res,adj=c(1,1),
-         labels = paste0("p=",round(enrichment_table$pval[enrichment_table$pathway == pathway_name],5),
-                         "\nNES=",round(enrichment_table$NES[enrichment_table$pathway == pathway_name],3),
-                         "\nES=",round(enrichment_table$ES[enrichment_table$pathway == pathway_name],3) ) )
-  }
-
-  lines( c(0,length(stats)), c(0,0),xpd=T,lwd=1 )
-  lines( c(0,0), c(0,max(toPlot$y)),xpd=T,lwd=1 )
-  text( length(stats)/2, min(toPlot$y) ,labels="gene rank",adj=c(.5,1.5),xpd=T)
-  text( 0, mean(range(toPlot$y)) ,labels="ES",srt=90,adj=c(.5,-.5),xpd=T)
-
-}
-
-
-
-plot_sankey <- function(df, plot_labels=T,plot_weights=T,color_by=1,
-                        order_1_by="NULL",order_2_by="NULL",
-                        xlim=c(0,1),ylim1=c(0,1),ylim2=c(0,1),
-                        use_w1 = T,use_w2 = T,gapv = .03,gap2v = .005,
+plot_sankey <- function(df, plot_labels=T, plot_weights=T, color_by=1,
+                        order_1_by="NULL", order_2_by="NULL",
+                        xlim=c(0,1), ylim1=c(0,1), ylim2=c(0,1),
+                        use_w1 = T, use_w2 = T, gapv = 0.03, gap2v = 0.005,
                         smoothing = 0.15, nbreaks = 100, add=F, pal=NULL,...){
 
   if( order_1_by == "total"){
@@ -789,6 +738,55 @@ plot_sankey <- function(df, plot_labels=T,plot_weights=T,color_by=1,
 
 
 
+plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
+                        frame=F,axes=F,xlab="",ylab="", main=NULL,...){
+  rnk <- rank(-stats)
+  ord <- order(rnk)
+  statsAdj <- stats[ord]
+  statsAdj <- sign(statsAdj) * (abs(statsAdj)^1)
+  statsAdj <- statsAdj/max(abs(statsAdj))
+
+  pathway <- gmt[[pathway_name]]
+  pathway <- sort(unname(as.vector(na.omit(match(pathway, names(statsAdj))))))
+  pathway <- sort(pathway)
+  gseaRes <- calcGseaStat(statsAdj, selectedStats = pathway,
+                          returnAllExtremes = TRUE)
+
+  bottoms <- gseaRes$bottoms
+  tops <- gseaRes$tops
+  n <- length(statsAdj)
+  xs <- as.vector(rbind(pathway - 1, pathway))
+  ys <- as.vector(rbind(bottoms, tops))
+  toPlot <- data.frame(x = c(0, xs, n + 1), y = c(0, ys, 0))
+  diff <- (max(tops) - min(bottoms))/8
+
+  plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,
+       main=ifelse(is.null(main),pathway_name,main),
+       xlim=c(0,length(stats)),xaxs="i",yaxs="i",
+       ylim=c(min(toPlot$y),
+              max(toPlot$y)),
+       frame=frame,axes=axes,xlab=xlab,ylab=ylab,...)
+  points(x=pathway,y=rep(0,length(pathway)),pch=73,xpd=T)
+  lines(c(pathway[which.max(gseaRes$tops)],
+          pathway[which.max(gseaRes$tops)]),
+        c(0,gseaRes$res),lty=2,col="grey")
+
+  if(!is.null(enrichment_table)){
+    text(length(stats),gseaRes$res,adj=c(1,1),
+         labels = paste0("p=",round(enrichment_table$pval[enrichment_table$pathway == pathway_name],5),
+                         "\nNES=",round(enrichment_table$NES[enrichment_table$pathway == pathway_name],3),
+                         "\nES=",round(enrichment_table$ES[enrichment_table$pathway == pathway_name],3) ) )
+  }
+
+  lines( c(0,length(stats)), c(0,0),xpd=T,lwd=1 )
+  lines( c(0,0), c(0,max(toPlot$y)),xpd=T,lwd=1 )
+  text( length(stats)/2, min(toPlot$y) ,labels="gene rank",adj=c(.5,1.5),xpd=T)
+  text( 0, mean(range(toPlot$y)) ,labels="ES",srt=90,adj=c(.5,-.5),xpd=T)
+
+}
+
+
+
 # CLUSTER DENDROGRAM
 # mypar(4,4)
 # cluster_means <- as.matrix(sapply(unique(cl$membership),function(x){
@@ -818,4 +816,4 @@ plot_sankey <- function(df, plot_labels=T,plot_weights=T,color_by=1,
 # cluster_means <- cbind( cluster_means [,-c(colN,rowN)], rowMeans(cluster_means[,c(colN,rowN)]) )
 # colnames(cluster_means)[ncol(cluster_means)] <- paste0(rowN,"_",colN)
 #
-# 
+#
