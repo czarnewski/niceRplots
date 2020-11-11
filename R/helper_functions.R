@@ -373,7 +373,7 @@ barlist <- function(data, genes, clustering, plot_y_axis=T,plot_x_axis=T,labels=
   } else {grouping <- factor(clustering)}
   
   n <- length(unique(grouping))
-  plot(c(0,ncol(data)*1.2-.5),c(-1,-1),
+  plot(c(0,ncol(data)*1.2),c(-1,-1),
        ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",
        xaxs="i",las=1,xlab="",main=main,xaxt = "n",yaxt = "n",
        cex.main=cex.main,font.main=font.main)
@@ -438,7 +438,7 @@ barlist <- function(data, genes, clustering, plot_y_axis=T,plot_x_axis=T,labels=
     }
     
     lines(c(0,0),c(panel_row,panel_row+.9),xpd=F,lwd=2)
-    lines(c(0, length(x)*1.2-.5 ),c(panel_row,panel_row),xpd=F,lwd=2)
+    lines(c(0, length(x)*1.2 ),c(panel_row,panel_row),xpd=F,lwd=2)
     
     # if(plot_y_axis){
     #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
@@ -615,5 +615,213 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
 # colnames(cluster_means)[ncol(cluster_means)] <- paste0(rowN,"_",colN)
 # 
 # 
+
+
+
+plot_sankey <- function(df, plot_labels=T,plot_weights=T,color_by=1,
+                        order_1_by="NULL",order_2_by="NULL",
+                        xlim=c(0,1),ylim1=c(0,1),ylim2=c(0,1),
+                        use_w1 = T,use_w2 = T,gapv = .03,gap2v = .005,
+                        smoothing = 0.15, nbreaks = 100, add=F, pal=NULL,...){
+  
+  if( order_1_by == "total"){
+    df[,1] <- factor(df[,1],levels = names(sort(table(df[,1]),decreasing = T))) }
+  if( order_2_by == "total"){
+    df[,2] <- factor(df[,2],levels = names(sort(table(df[,2]),decreasing = T))) }
+  
+  if(is.null(pal)){
+    pal <- scales::hue_pal()(length(levels(df[,1])))
+  } else {
+    pal <- colorRampPalette(pal)(length(pal))
+  }
+  weights <- c(t(table(df)))
+  nzw <- weights!=0
+  
+  eee <- data.frame(x=c(sapply(levels(df[,1]),function(x)rep(x,ncol(table(df))))),
+                    y=rep(levels(df[,2]),nrow(table(df))),
+                    w=c(t(table(df))) )
+  eee <- eee[eee$w>0,]
+  
+  eee$u1 <- rev(cumsum(rev(eee$w)))
+  
+  eee$x_orig <- factor(eee$x,levels=levels(df[,1]))
+  eee$y_orig <- factor(eee$y,levels=levels(df[,2]))
+  
+  eee$x <- sprintf("%03d", as.numeric(eee$x_orig))
+  eee$y <- sprintf("%03d", as.numeric(eee$y_orig))
+  
+  eee$order1 <- order(paste0(eee$x,"_",eee$y))
+  eee$order2 <- order(paste0(eee$y,"_",eee$x))
+  
+  rownames(eee) <- as.character(1:nrow(eee))
+  
+  
+  # use_w1 <- T
+  maxv <- ylim1[2]
+  minv <- ylim1[1]
+  # gapv <- .03
+  # gap2v <- .005
+  # smoothing <- 0.15
+  # nbreaks <- 100
+  ngaps <- length(unique(eee$x))-1
+  sp <- (maxv-gapv*ngaps-gap2v*nrow(eee)-minv)/(ifelse(use_w1,sum(eee$w),nrow(eee)))
+  
+  tempu <- c()
+  tempd <- c()
+  eee <- eee[as.character(eee$order1),]
+  for(i in 1:nrow(eee)){
+    tempu <- c(tempu,maxv)
+    maxv <- maxv - sp*ifelse(use_w1,eee$w[i],1)
+    tempd <- c(tempd,maxv)
+    if(i != nrow(eee)){
+      if( eee$x[i] != eee$x[i+1] ){
+        # message("gap!")
+        maxv <- maxv - gapv
+      }
+    }
+    maxv <- maxv - gap2v
+  }
+  eee$y1 <- tempu
+  eee$y2 <- tempd
+  
+  
+  # use_w2 <- T
+  maxv <- ylim2[2]
+  minv <- ylim2[1]
+  ngaps <- length(unique(eee$y))-1
+  sp <- (maxv-gapv*ngaps-gap2v*nrow(eee)-minv)/(ifelse(use_w2,sum(eee$w),nrow(eee)))
+  tempu <- c()
+  tempd <- c()
+  eee <- eee[as.character(eee$order2),]
+  for(i in 1:nrow(eee) ){
+    tempu <- c(tempu,maxv)
+    maxv <- maxv - sp*ifelse(use_w2,eee$w[i],1)
+    tempd <- c(tempd,maxv)
+    if(i != nrow(eee)){
+      if( eee$y[i] != eee$y[i+1] ){
+        # message("gap!")
+        maxv <- maxv - gapv
+      }
+    }
+    maxv <- maxv - gap2v
+  }
+  eee$y3 <- tempu
+  eee$y4 <- tempd
+  
+  
+  eee <- eee[order(eee$order1),]
+  
+  
+  if(order_2_by == "disentangled"){
+    
+    temp <- apply( eee, 1, function(x){
+      return(rep( (as.numeric(x["y1"])+as.numeric(x["y2"]) )/2 , as.numeric(x["w"]) )) })
+    temp2 <- sapply( as.character(unique(eee$y_orig)), function(x){
+      return(mean( as.numeric(unlist(temp[eee$y_orig==x])) )) })
+    sort(temp2,T)
+    
+    # eee$y_orig <- factor(eee$y_orig,levels=names(sort(temp2,T)))
+    eee$y <- sprintf("%03d", as.numeric(factor(eee$y_orig,levels=names(sort(temp2,T)))))
+    
+    eee <- eee[as.character(1:nrow(eee)),]
+    
+    eee$order1 <- order(paste0(eee$x,"_",eee$y))
+    eee$order2 <- order(paste0(eee$y,"_",eee$x))
+    
+    
+    # use_w1 <- T
+    maxv <- ylim1[2]
+    minv <- ylim1[1]
+    # gapv <- .03
+    # gap2v <- .005
+    # smoothing <- 0.15
+    # nbreaks <- 100
+    ngaps <- length(unique(eee$x))-1
+    sp <- (maxv-gapv*ngaps-gap2v*nrow(eee)-minv)/(ifelse(use_w1,sum(eee$w),nrow(eee)))
+    
+    tempu <- c()
+    tempd <- c()
+    # eee <- eee[as.character(eee$order1),]
+    for(i in 1:nrow(eee)){
+      tempu <- c(tempu,maxv)
+      maxv <- maxv - sp*ifelse(use_w1,eee$w[i],1)
+      tempd <- c(tempd,maxv)
+      if(i != nrow(eee)){
+        if( eee$x[i] != eee$x[i+1] ){
+          # message("gap!")
+          maxv <- maxv - gapv
+        }
+      }
+      maxv <- maxv - gap2v
+    }
+    eee$y1 <- tempu
+    eee$y2 <- tempd
+    
+    # use_w2 <- T
+    maxv <- ylim2[2]
+    minv <- ylim2[1]
+    ngaps <- length(unique(eee$y))-1
+    sp <- (maxv-gapv*ngaps-gap2v*nrow(eee)-minv)/(ifelse(use_w2,sum(eee$w),nrow(eee)))
+    tempu <- c()
+    tempd <- c()
+    eee <- eee[as.character(eee$order2),]
+    for(i in 1:nrow(eee) ){
+      tempu <- c(tempu,maxv)
+      maxv <- maxv - sp*ifelse(use_w2,eee$w[i],1)
+      tempd <- c(tempd,maxv)
+      if(i != nrow(eee)){
+        if( eee$y[i] != eee$y[i+1] ){
+          # message("gap!")
+          maxv <- maxv - gapv
+        }
+      }
+      maxv <- maxv - gap2v
+    }
+    eee$y3 <- tempu
+    eee$y4 <- tempd
+    
+    
+    eee <- eee[order(eee$order1),]
+    
+  }
+  
+  x <- seq(xlim[1],xlim[2],length.out = nbreaks)
+  
+  if( !add ){
+    plot( 0 , 0,type="n", ylim=c(min(ylim1,ylim2), max(ylim1,ylim2)),xlim=xlim,frame=F,axes=F,ylab="",xlab="",...)
+  }
+  
+  for(i in nrow(eee):1){
+    ys <- SSlogis(x ,1, mean(xlim), smoothing*diff(range(xlim)))
+    ys <- (ys - min(ys)) / (max(ys) - min(ys))*(eee$y3[i]-eee$y1[i])
+    ys <- ys + ifelse( eee$y3[i]-eee$y1[i] < 0 , max(eee$y1[i],eee$y3[i]), min(eee$y1[i],eee$y3[i]))
+    
+    ys2 <- SSlogis(x ,1, mean(xlim), smoothing*diff(range(xlim)))
+    ys2 <- (ys2 - min(ys2)) / (max(ys2) - min(ys2))*(eee$y4[i]-eee$y2[i])
+    ys2 <- ys2 + ifelse( eee$y4[i]-eee$y2[i] < 0 , max(eee$y2[i],eee$y4[i]), min(eee$y2[i],eee$y4[i]))
+    
+    polygon(x = c(x, rev(x)),col=paste0(pal[factor(eee[,c("x","y")[color_by] ])[i]],"90"),border = F,
+            y = c(ys , rev(ys2)  ))
+  }
+  
+  if(plot_labels){
+    for(i in levels(eee$x_orig)){
+      text( x=xlim[1],y = mean(range(eee[ eee$x_orig == i, c("y1","y2") ])),labels = i,pos = 2,xpd=T )
+      lines(c(xlim[1],xlim[1]),range(eee[ eee$x_orig == i, c("y1","y2") ]))}
+    for(i in levels(eee$y_orig)){
+      text( x=xlim[2],y = mean(range(eee[ eee$y_orig == i, c("y3","y4") ])),labels = i,pos = 4,xpd=T )
+      lines(c(xlim[2],xlim[2]),range(eee[ eee$y_orig == i, c("y3","y4") ]))}
+  }
+  
+  if(plot_weights){
+    for(i in 1:nrow(eee)){
+      text( x=xlim[1]+diff(xlim)*.01, y = mean(range(eee[ i, c("y1","y2") ])),
+            labels = eee$w[i],adj = 0,xpd=T,cex= .3+.7*(eee$w[i]/max(eee$w)) )}
+    for(i in 1:nrow(eee)){
+      text( x=xlim[2]-diff(xlim)*.01, y = mean(range(eee[ i, c("y3","y4") ])),
+            labels = eee$w[i],adj = 1.5,xpd=T,cex= .3+.7*(eee$w[i]/max(eee$w)) )}
+  }
+  return(eee)
+}
 
 
