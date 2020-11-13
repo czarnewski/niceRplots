@@ -2,7 +2,6 @@
 require(igraph)
 require(scales)
 require(RColorBrewer)
-require(MASS)
 
 plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
                       bg=NA,font.labels=1,cex.labels=1,cex=.3,dims=c(1,2),mins=0,
@@ -197,17 +196,17 @@ add_graph <- function(a,red,graph="RNA_snn",percent_connections=1){
 
 
 
-compute_density <- function(red,nbin=200){
-  map <- MASS::kde2d(x = red[,1], y = red[,2],h = c(diff(apply(red, 2, quantile, probs=c(0.05, 0.95), na.rm=TRUE)) / 7.5),
-                      n = c(nbin,nbin))
-  mkBreaks <- function(u) u - diff(range(u))/(length(u) - 1)/2
-  xbin <- cut(red[, 1], mkBreaks(map$x), labels = FALSE)
-  ybin <- cut(red[, 2], mkBreaks(map$y), labels = FALSE)
-  dens <- map$z[cbind(xbin, ybin)]
-  dens[is.na(dens)] <- 0
-  dens <- (dens-min(dens))/(max(dens)-min(dens))
-  return(dens)
-}
+# compute_density <- function(red,nbin=200){
+#   map <- MASS::kde2d(x = red[,1], y = red[,2],h = c(diff(apply(red, 2, quantile, probs=c(0.05, 0.95), na.rm=TRUE)) / 7.5),
+#                       n = c(nbin,nbin))
+#   mkBreaks <- function(u) u - diff(range(u))/(length(u) - 1)/2
+#   xbin <- cut(red[, 1], mkBreaks(map$x), labels = FALSE)
+#   ybin <- cut(red[, 2], mkBreaks(map$y), labels = FALSE)
+#   dens <- map$z[cbind(xbin, ybin)]
+#   dens[is.na(dens)] <- 0
+#   dens <- (dens-min(dens))/(max(dens)-min(dens))
+#   return(dens)
+# }
 
 
 add_centroid_lines <- function(red,feat,pal,centroids){
@@ -335,9 +334,9 @@ graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cut
 
 
 
-empty_plot <- function(){
+empty_plot <- function(...,main="",frame=F,xlab="",ylab="",cex.main=1,font.main=1){
   plot( c(0,1),c(0,1) , type="n", axes=F,
-        main="",frame=F,xlab="",ylab="")
+        main=main,frame=frame,xlab=xlab,ylab=ylab,cex.main=cex.main,font.main=font.main,...)
 }
 
 
