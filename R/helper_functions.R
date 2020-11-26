@@ -779,7 +779,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
   }
 
   lines( c(0,length(stats)), c(0,0),xpd=T,lwd=1 )
-  lines( c(0,0), c(min(toPlot$y),max(toPlot$y)),xpd=T,lwd=1 )
+  lines( c(0,0), c(-max(abs(range(toPlot$y))),max(abs(range(toPlot$y)))),xpd=T,lwd=1 )
   text( length(stats)/2, min(toPlot$y) ,labels="gene rank",adj=c(.5,1.5),xpd=T)
   text( 0, mean(range(toPlot$y)) ,labels="ES",srt=90,adj=c(.5,-.5),xpd=T)
 
