@@ -766,9 +766,9 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
        ylim=c(-max(abs(range(toPlot$y))),max(abs(range(toPlot$y)))),
        frame=frame,axes=axes,xlab=xlab,ylab=ylab,...)
   points(x=pathway,y=rep(0,length(pathway)),pch=73,xpd=T)
-  lines(c(pathway[which.max(gseaRes$tops)],
-          pathway[which.max(gseaRes$tops)]),
-        c(0,gseaRes$res),lty=2,col="grey")
+#  lines(c(pathway[which.max(gseaRes$tops)],
+#          pathway[which.max(gseaRes$tops)]),
+#        c(0,gseaRes$res),lty=2,col="grey")
 
   if(!is.null(enrichment_table)){
     text(length(stats),gseaRes$res,adj=c(1,1),
