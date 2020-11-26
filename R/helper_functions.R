@@ -760,7 +760,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
   toPlot <- data.frame(x = c(0, xs, n + 1), y = c(0, ys, 0))
   diff <- (max(tops) - min(bottoms))/8
 
-  plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,
+  plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,cex.main=cex.main,font.main=font.main,
        main=ifelse(is.null(main),pathway_name,main),
        xlim=c(0,length(stats)),xaxs="i",yaxs="i",
        ylim=c(-max(abs(range(toPlot$y))),max(abs(range(toPlot$y)))),
