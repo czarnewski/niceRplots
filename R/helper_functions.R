@@ -739,7 +739,7 @@ plot_sankey <- function(df, plot_labels=T, plot_weights=T, color_by=1,
 
 
 plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
-                        frame=F,axes=F,xlab="",ylab="", main=NULL,...){
+                        frame=F,axes=F,xlab="",ylab="", main=NULL,cex.main=1,font.main=1,...){
   rnk <- rank(-stats)
   ord <- order(rnk)
   statsAdj <- stats[ord]
@@ -779,7 +779,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
   }
 
   lines( c(0,length(stats)), c(0,0),xpd=T,lwd=1 )
-  lines( c(0,0), c(0,max(toPlot$y)),xpd=T,lwd=1 )
+  lines( c(0,0), c(min(toPlot$y),max(toPlot$y)),xpd=T,lwd=1 )
   text( length(stats)/2, min(toPlot$y) ,labels="gene rank",adj=c(.5,1.5),xpd=T)
   text( 0, mean(range(toPlot$y)) ,labels="ES",srt=90,adj=c(.5,-.5),xpd=T)
 
