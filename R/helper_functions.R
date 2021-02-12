@@ -363,22 +363,26 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
 
 ###Gene expression barplots
 #---------------
-barlist <- function(data, genes, clustering, plot_y_axis=T,plot_x_axis=T,labels=NULL,srt=0,orderby = NULL,
+barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,labels=NULL,srt=0,orderby = NULL,
                     assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,
                     col = "default",draw_mean_lines=T,...){
-
+  
+  if(is.null(clustering)){clustering <- rep("N",ncol(data))}
+  
   if(is(data,"Seurat")){
     data <- data@assays[[assay]]@data[genes,]
     grouping <- data@meta.data[,clustering]
-  } else {grouping <- factor(clustering)}
+  } else {
+    grouping <- factor(clustering)
+  }
+  
+  data[is.na(data)] <- 0
 
   n <- length(unique(grouping))
   plot(c(0,ncol(data)*1.2),c(-1,-1),
        ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",
        xaxs="i",las=1,xlab="",main=main,xaxt = "n",yaxt = "n",
        cex.main=cex.main,font.main=font.main)
-
-
 
   temp <- factor(as.character(grouping))
   if( !is.na(sum(as.numeric(levels(temp)))) ){
