@@ -86,8 +86,15 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
                     bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
 
   if(is(data,"Seurat")){
-    data <- data@assays[[assay]]@data[genes,]
     grouping <- data@meta.data[,clustering]
+    
+    data <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data@assays[[assay]]@data) ){
+        return(data@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data@meta.data) ) {
+        return(feat <- data@meta.data[, x])
+      }}
+    )))
   } else {grouping <- factor(clustering)}
 
 
@@ -370,11 +377,16 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
   if(is.null(clustering)){clustering <- rep("N",ncol(data))}
   
   if(is(data,"Seurat")){
-    data <- data@assays[[assay]]@data[genes,]
     grouping <- data@meta.data[,clustering]
-  } else {
-    grouping <- factor(clustering)
-  }
+    
+    data <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data@assays[[assay]]@data) ){
+        return(data@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data@meta.data) ) {
+        return(feat <- data@meta.data[, x])
+      }}
+    )))
+  } else {grouping <- factor(clustering)}
   
   data[is.na(data)] <- 0
 
