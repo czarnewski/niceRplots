@@ -228,12 +228,19 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 
 #Function to plot dot gene averages
 #---------------
-plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),main="",
+plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),main="",assay="RNA",
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
 
   if(is(data,"Seurat")){
-    data <- data@assays[[assay]]@data[genes,]
     grouping <- data@meta.data[,clustering]
+    
+    data <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data@assays[[assay]]@data) ){
+        return(data@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data@meta.data) ) {
+        return(feat <- data@meta.data[, x])
+      }}
+    )))
   } else {grouping <- factor(clustering)}
 
 
@@ -485,17 +492,22 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 
 
 
-getcluster <- function(data, gene, clustering, lowest=F){
+getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
 
   if(is(data,"Seurat")){
-    data <- data@assays[[assay]]@data[genes,]
     grouping <- data@meta.data[,clustering]
-  } else {
-    grouping <- clustering
-  }
+    
+    data <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data@assays[[assay]]@data) ){
+        return(data@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data@meta.data) ) {
+        return(feat <- data@meta.data[, x])
+      }}
+    )))
+  } else {grouping <- factor(clustering)}
 
   data <- sapply(unique(as.character(grouping)),function(x){
-    mean( data[ gene , as.character(grouping) == x ])
+    mean( data[ genes , as.character(grouping) == x ])
   })
   if(lowest){
     return( unique(as.character(grouping))[which.min(data)] )

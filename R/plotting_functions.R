@@ -16,11 +16,11 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
     feat <- rep(0,ncol(x))
   }
 
-  if(is.null(mins)){mins <- min(feat,na.rm = T)}
+  if( min(feat,na.rm = T) < mins ){mins <- min(feat,na.rm = T)}
   if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- 0 }
   
-  if(max(feat) != 0){
-    feat <- (feat - mins)/ ( sort(feat,T,na.last = T)[ min(10,sum(feat!=0,na.rm = T))  ] - mins)
+  if(max(feat,na.rm = T) != 0){
+    feat <- (feat - mins) / ( max(feat,na.rm = T) - mins)
     feat[feat > 1] <- 1}
   o <- order(feat,na.last = T)
 
