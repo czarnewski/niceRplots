@@ -844,3 +844,97 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
 # colnames(cluster_means)[ncol(cluster_means)] <- paste0(rowN,"_",colN)
 #
 #
+
+
+
+
+#Function to plot dot gene averages
+#---------------
+plot_dots_difference <- function(data, data2, genes, clustering,clustering2, pal=c("blue","navy","grey95","firebrick","red"),main="",assay="RNA",
+                      srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
+  
+  if(is(data,"Seurat")){
+    grouping <- data@meta.data[,clustering]
+    
+    data <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data@assays[[assay]]@data) ){
+        return(data@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data@meta.data) ) {
+        return(feat <- data@meta.data[, x])
+      }}
+    )))
+  } else {grouping <- factor(clustering)}
+  
+  if(is(data2,"Seurat")){
+    grouping2 <- data2@meta.data[,clustering2]
+    
+    data2 <- t(as.data.frame(sapply(genes,function(x){
+      if(x %in% rownames(data2@assays[[assay]]@data) ){
+        return(data2@assays[[assay]]@data[x,])
+      } else if(x %in% colnames(data2@meta.data) ) {
+        return(feat <- data2@meta.data[, x])
+      }}
+    )))
+  } else {grouping2 <- factor(clustering2)}
+  
+  
+  temp <- factor(as.character(grouping))
+  if( !is.na(sum(as.numeric(levels(temp)))) ){
+    temp <- factor(as.numeric(as.character(grouping))) }
+  
+  temp2 <- factor(as.character(grouping2))
+  if( !is.na(sum(as.numeric(levels(temp2)))) ){
+    temp2 <- factor(as.numeric(as.character(grouping2))) }
+  
+  x1 <- rowsum(t(as.matrix(data[rev(genes),])), temp)
+  x1 <- t(x1 / c(table(temp)))
+  
+  x1_2 <- rowsum(t(as.matrix(data2[rev(genes),])), temp2)
+  x1_2 <- t(x1_2 / c(table(temp2)))
+  
+  x1 <- x1 - x1_2
+  x1[x1 > 1.5] <- 1.5
+  x1[x1 < -1.5] <- -1.5
+  
+  print(range(x1))
+  x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
+  x2 <- t(x2 / c(table(temp)))
+  
+  x2_2 <- rowsum(( t (as.matrix(data2[rev(genes),]!=0)) *1), temp2)
+  x2_2 <- t(x2_2 / c(table(temp2)))
+  
+  x2 <- abs(x2 - x2_2)
+  
+  print(range(x2))
+  plot(0,0,type="n",las=1,xlim=c(.5,ncol(x1)+.5),ylim=c(.5,nrow(x1)+.5),
+       axes=F,ylab="",xlab="",main=main,xaxs="i",yaxs="i",...)
+  
+  if(show_grid){
+    for(i in 1:length(levels(temp) )){
+      lines(c(i,i),c(length(unique(genes))+.5,0),col="grey95",lwd=.5,xpd=F)
+    }
+    for(i in 1:length(unique(genes)) ){
+      lines(c(0,length(levels(temp) )+0.5),c(i,i),col="grey95",lwd=.5,xpd=F)
+    }
+  }
+  
+  points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
+         pch=16, col=c( colorRampPalette(pal)(99))[c(t(x1) )*49/2+50 ],xpd=T)
+  
+  text(1:ncol(x1), par("usr")[3] - (par("usr")[4])/200, labels = colnames(x1), srt = srt,
+       adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),
+       xpd = TRUE, cex=cex.col)
+  text(par("usr")[1] - (par("usr")[2])/200, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
+  
+  if(show_axis){
+    lines(c(.5,.5),c(.5,nrow(x1)+.5),col="black",lwd=1,xpd=T)
+    lines(.5+c(0, length(levels(temp) )),c(.5,.5),col="black",lwd=1,xpd=T)
+    par(xpd=F)
+  }
+}
+#---------------
+
+
+
+
+
