@@ -1007,7 +1007,7 @@ add_size_legend <- function(
          pch = 21 )
   text(x      = rep( x+width , N ),
        y      = seq( y-height*0.2 , y-1*height , length.out = N ),
-       labels = paste0( seq( 0 , 100 , length.out = N ) , "%" ),
+       labels = labels,
        pos    = 4,
        xpd    = T)
 }
