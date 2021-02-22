@@ -229,7 +229,7 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 #Function to plot dot gene averages
 #---------------
 plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),main="",assay="RNA",
-                      srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
+                      srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.2,show_axis=T,add_legend=T,...){
 
   if(is(data,"Seurat")){
     grouping <- data@meta.data[,clustering]
@@ -280,6 +280,12 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
     lines(c(.5,.5),c(.5,nrow(x1)+.5),col="black",lwd=1,xpd=T)
     lines(.5+c(0, length(levels(temp) )),c(.5,.5),col="black",lwd=1,xpd=T)
     par(xpd=F)
+  }
+  
+  if(add_legend){
+    add_scale_legend(labels = c("min","max"),
+                     pal = c( "grey95",colorRampPalette(pal)(19)))
+    add_size_legend(min.cex = min_size)
   }
 }
 #---------------
@@ -850,7 +856,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
 
 #Function to plot dot gene averages
 #---------------
-plot_dots_difference <- function(data, data2, genes, clustering,clustering2, pal=c("blue","navy","grey95","firebrick","red"),main="",assay="RNA",
+plot_dots_difference <- function(data, data2, genes, clustering, clustering2, pal=c("blue","navy","grey95","firebrick","red"),main="",assay="RNA",
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
   
   if(is(data,"Seurat")){
@@ -931,8 +937,82 @@ plot_dots_difference <- function(data, data2, genes, clustering,clustering2, pal
     lines(.5+c(0, length(levels(temp) )),c(.5,.5),col="black",lwd=1,xpd=T)
     par(xpd=F)
   }
+  
+  add_scale_legend(labels = c("+1","0","-1"))
+  add_size_legend(labels = c("0%","50%","100%"))
 }
 #---------------
+
+
+
+
+
+
+
+
+add_scale_legend <- function(
+  x      = par( "usr" )[2],
+  y      = par( "usr" )[4],
+  width  = diff( par( "usr" )[1:2] ),
+  height = diff( par( "usr" )[3:4] ),
+  labels = c( "min" , "max" ),
+  pal    = colorRampPalette(c("blue","navy","grey95","firebrick","red") )(99)
+){
+    rasterImage(
+      image       = rev( as.raster( pal ) ) ,
+      xleft       = x + width / 40 ,
+      xright      = x + width / 20 ,
+      ybottom     = y - height / 4 ,
+      ytop        = y ,
+      interpolate = FALSE ,
+      xpd         = T
+    )
+  
+  N  <- length( labels )
+  text( x =      rep( x + width/20 , N) ,
+        y =      seq( y - height/4 , y , length.out = N ),
+        labels = labels,
+        pos =    4,
+        xpd =    T )
+}
+
+
+
+
+
+
+
+add_size_legend <- function(
+  x      = par( "usr" )[2],
+  y      = par( "usr" )[4] - diff(par( "usr" )[1:2])/2,
+  width  = (diff(par( "usr" )[1:2])/40+diff(par( "usr" )[1:2])/20)/2,
+  height = diff(par( "usr" )[3:4])/3,
+  labels = paste0( seq( 0,100, length.out = 3) ,"%" ),
+  pal    = "black",
+  pch    = 21,
+  min.cex = 0.2,
+  max.cex = 2.5
+){
+  N  <- length( labels )
+  
+  if( length(pal) < length(labels) ){
+    pal <- colorRampPalette( pal )(99)
+  }
+    
+  points(x   = rep( x + width , N ),
+         y   = seq( y - height*0.2 , y-1*height , length.out = N ),
+         cex = seq( min.cex, max.cex , length.out = N ),
+         xpd = T ,
+         bg  = pal ,
+         pch = 21 )
+  text(x      = rep( x+width , N ),
+       y      = seq( y-height*0.2 , y-1*height , length.out = N ),
+       labels = paste0( seq( 0 , 100 , length.out = N ) , "%" ),
+       pos    = 4,
+       xpd    = T)
+}
+
+
 
 
 
