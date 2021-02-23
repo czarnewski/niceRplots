@@ -1001,13 +1001,13 @@ add_size_legend <- function(
   }
     
   points(x   = rep( x + width , N ),
-         y   = seq( y - height*0.2 , y-1*height , length.out = N ),
+         y   = seq(  y-1*height , y - height*0.2 ,length.out = N ),
          cex = seq( min.cex, max.cex , length.out = N ),
          xpd = T ,
          bg  = pal ,
          pch = 21 )
   text(x      = rep( x+width , N ),
-       y      = seq( y-height*0.2 , y-1*height , length.out = N ),
+       y      = seq( y-1*height ,y-height*0.2 ,  length.out = N ),
        labels = labels,
        pos    = 4,
        xpd    = T)
