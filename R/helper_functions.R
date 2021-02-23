@@ -109,9 +109,10 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   plot(c(.4,n+.6),c(-1,-1), ylim=c(0,length(genes)),ylab="",type="n" ,frame.plot = F,yaxs="i",xaxs="i",las=1,xlab="",main="",xaxt = "n",yaxt = "n",cex.main=cex.main)
 
   col <- colorRampPalette(col)(length(col))
-  col <- col[as.factor(sort(unique(grouping)))]
+  # col <- col[as.factor(sort(unique(grouping)))]
 
-  temp <- factor(as.character(grouping))
+  # temp <- factor(as.character(grouping))
+  temp <- grouping
   if( !is.na(sum(as.numeric(levels(temp)))) ){
     temp <- factor(as.numeric(as.character(grouping))) }
 
@@ -984,9 +985,9 @@ add_scale_legend <- function(
 
 add_size_legend <- function(
   x      = par( "usr" )[2],
-  y      = par( "usr" )[4] - diff(par( "usr" )[1:2])/2,
+  y      = par( "usr" )[4] - diff(par( "usr" )[3:4])/3,
   width  = (diff(par( "usr" )[1:2])/40+diff(par( "usr" )[1:2])/20)/2,
-  height = diff(par( "usr" )[3:4])/3,
+  height = diff(par( "usr" )[3:4])/4,
   labels = paste0( seq( 0,100, length.out = 3) ,"%" ),
   pal    = "black",
   pch    = 21,
