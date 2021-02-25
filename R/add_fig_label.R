@@ -1,37 +1,51 @@
 #' @title Adds legend
 #' 
-#' @description Adds legend dah (1line)
+#' @description Adds text to the upperleft corner
 #' 
-#' @details Super niceR letter (multiple lines)
+#' @details Adds text to the upperleft corner. Usually a letter such as "a", "b", etc.
 #' 
 #' @export 
 #' @rdname add_letter
-#' @param label the lable to be ploted
-#' @param cex does nothing
-#' @param font the lable to be ploted
-#' @param plot the lable to be ploted
-#' @param ... other parameters to not be used
+#' @param label A letter to be added. Default: "a".
+#' @param cex The size of the text to be plotted. Default: 2.
+#' @param font The font of the text Default: 2.
+#' @param plot The lable to be ploted
+#' @param ... Other parameters passed to `text`
 #' @return nonsense
 #' 
 #' @examples 
-#' #Adds figure label
+#' # Adds a simple figure label
+#' plot(0)
 #' add_letter("a")
-add_letter <- function(label="", cex=2, font=2, plot=T,...) {
-  totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])
-  totx <- par("usr")[1] - ( (par("usr")[2] - par("usr")[1]) * par("mai")[2] / totx )
-  
-  toty <- (par("fin")[2] - par("mai")[1] - par("mai")[3])
-  toty <- par("usr")[4] + ( (par("usr")[4] - par("usr")[3]) * par("mai")[3] / toty )
-  
-  if(plot){
-    sw <- strwidth(label[1], cex=cex) * 60/100
-    sh <- strheight(LETTERS[1], cex=cex) * 60/100
+#' 
+#' # Adds labels to each figure (automatically)
+#' figure_labels <- letters
+#' par(mfrow=c(2,2))
+#' for(i in 1:4){
+#'   plot(0)
+#'   add_letter(figure_labels) ; figure_labels <- figure_labels[-1]
+#' }
+#' 
+#' 
+#' 
+add_letter <- function(label=NULL, cex=2, font=2, plot=T,...) {
+  try({
+    totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])
+    totx <- par("usr")[1] - ( (par("usr")[2] - par("usr")[1]) * par("mai")[2] / totx )
     
-    text(label[1], x=totx+sw, y=toty-sh, xpd=T, cex=cex, font=font,...)
-    # mtext( text = label[1], at = c(totx+sw, toty-sh), cex=cex, font=font, ... )
-  } else{
-    return(c(totx,toty))
-  }
+    toty <- (par("fin")[2] - par("mai")[1] - par("mai")[3])
+    toty <- par("usr")[4] + ( (par("usr")[4] - par("usr")[3]) * par("mai")[3] / toty )
+    
+    if(plot){
+      sw <- strwidth(label[1], cex=cex) * 60/100
+      sh <- strheight(LETTERS[1], cex=cex) * 60/100
+      
+      text(label[1], x=totx+sw, y=toty-sh, xpd=T, cex=cex, font=font,...)
+      # mtext( text = label[1], at = c(totx+sw, toty-sh), cex=cex, font=font, ... )
+    } else{
+      return(c(totx,toty))
+    }
+  })
 }
 
 

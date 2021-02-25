@@ -4,29 +4,41 @@
 \alias{add_letter}
 \title{Adds legend}
 \usage{
-add_letter(label = "", cex = 2, font = 2, plot = T, ...)
+add_letter(label = NULL, cex = 2, font = 2, plot = T, ...)
 }
 \arguments{
-\item{label}{the lable to be ploted}
+\item{label}{A letter to be added. Default: "a".}
 
-\item{cex}{does nothing}
+\item{cex}{The size of the text to be plotted. Default: 2.}
 
-\item{font}{the lable to be ploted}
+\item{font}{The font of the text Default: 2.}
 
-\item{plot}{the lable to be ploted}
+\item{plot}{The lable to be ploted}
 
-\item{...}{other parameters to not be used}
+\item{...}{Other parameters passed to `text`}
 }
 \value{
 nonsense
 }
 \description{
-Adds legend dah (1line)
+Adds text to the upperleft corner
 }
 \details{
-Super niceR letter (multiple lines)
+Adds text to the upperleft corner. Usually a letter such as "a", "b", etc.
 }
 \examples{
-#Adds figure label
+# Adds a simple figure label
+plot(0)
 add_letter("a")
+
+# Adds labels to each figure (automatically)
+figure_labels <- letters
+par(mfrow=c(2,2))
+for(i in 1:4){
+  plot(0)
+  add_letter(figure_labels) ; figure_labels <- figure_labels[-1]
+}
+
+
+
 }
