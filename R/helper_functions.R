@@ -830,9 +830,6 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
 # d [ !upper.tri(d) ] <- 0
 # image(d[nrow(d):1,] ,col=c("black",colorRampPalette(c("white", "grey80", "firebrick"))(90)),
 #       breaks=c(-1,-.0001,seq(0,1,length.out = 90)),frame=F,axes=F)
-#
-#
-#
 # clusters_used <- c()
 #
 # d <- cor(cluster_means)

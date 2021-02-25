@@ -301,32 +301,47 @@ plot_tree <- function( data, slingshot_curves, gene, rotate90=F, assay="RNA",edg
 
 
 
-graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0.01){
-  clustering_use <- factor(data@meta.data[,clustering])
-  g <- graph_from_adjacency_matrix(data@graphs[[graph]],weighted = T,diag = F)
-  g <- simplify(g)
-  eee <- as.data.frame(as_edgelist(g))
-  eee$g1 <- clustering_use[ match(eee[,1],colnames(data)) ]
-  eee$g2 <- clustering_use[ match(eee[,2],colnames(data)) ]
+graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0){
   
-  res <- data.frame()
-  for(k in levels(clustering_use)){
-    temp <- table(eee[eee$g1 == k,"g2"])
-    # temp <- temp / table(clustering_use)
-    temp <- temp/sum(temp)
-    temp[temp < cutoff] <- 0
-    res <- rbind(res, data.frame(s=k,p=temp))
-  }
+  clustering_use <- factor(data@meta.data[,clustering])
+  mm <- model.matrix( ~ 0 + clustering_use )
+  colnames(mm) <- levels(clustering_use)
+  
+  res <- data@graphs[[graph]]
+  # res <- res %*% Matrix::t(res)
+  res <- res %*% mm
+  res <- as.matrix(Matrix::t(res) %*% mm)
+  res <- res / c(table(clustering_use))
+  res <- t(res) / c(table(clustering_use))
+  # res[res < cutoff ] <- 0
+
+  res <- data.frame(s=c(sapply(colnames(res),res=res,function(x,res) rep(x,nrow(res)))),
+                    p.Var=rep( rownames(res) , ncol(res)),
+                    p.Freq= c(res) )
+  # g <- graph_from_adjacency_matrix(data@graphs[[graph]],weighted = T,diag = F)
+  # g <- simplify(g)
+  # eee <- as.data.frame(as_edgelist(g))
+  # eee$g1 <- clustering_use[ match(eee[,1],colnames(data)) ]
+  # eee$g2 <- clustering_use[ match(eee[,2],colnames(data)) ]
+  # 
+  # res <- data.frame()
+  # for(k in levels(clustering_use)){
+  #   temp <- table(eee[eee$g1 == k,"g2"])
+  #   # temp <- temp / table(clustering_use)
+  #   temp <- temp/sum(temp)
+  #   temp[temp < cutoff] <- 0
+  #   res <- rbind(res, data.frame(s=k,p=temp))
+  # }
   
   centroids <-  t(sapply( as.character(unique(clustering_use)) ,
                           red=data@reductions[[red]]@cell.embeddings,
                           cl1=as.character(clustering_use),
                           function(jj,red,cl1) { pmean(red[cl1==jj,])  }))
   
-  res$x0 <- centroids[ match(res[,1],rownames(centroids)), 1 ]
-  res$x1 <- centroids[ match(res[,2],rownames(centroids)), 1 ]
-  res$y0 <- centroids[ match(res[,1],rownames(centroids)), 2 ]
-  res$y1 <- centroids[ match(res[,2],rownames(centroids)), 2 ]
+  res$x0 <- as.numeric(centroids[ match(res[,1],rownames(centroids)), 1 ])
+  res$x1 <- as.numeric(centroids[ match(res[,2],rownames(centroids)), 1 ])
+  res$y0 <- as.numeric(centroids[ match(res[,1],rownames(centroids)), 2 ])
+  res$y1 <- as.numeric(centroids[ match(res[,2],rownames(centroids)), 2 ])
   
   return(res)
 }
