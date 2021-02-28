@@ -3,6 +3,11 @@ require(scales)
 
 #MAIN Violin plot function
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname violins
 violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=T,transparency=NULL,plot_x_axis=T,smooth=.1,method="log",points_method="proportional",col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
                     pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",srt=0,ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
 
@@ -79,6 +84,11 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
 
 #MAIN Violin plot function
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname violist
 violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.5,method="log",points_method="proportional",srt=0,transparency=NULL,
                     pt.col="grey",
                     pt.cex=.5,
@@ -182,6 +192,11 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
 
 #Function to calculate violin density
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname draw_violin
 draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="proportional",smooth=2,col="grey",
                         border="grey",at=1,pt.col="grey",pt.cex=0.5,pt.pch=16,bw=0.45,max_points=200,transparency=NULL){
   r <- sum(x!=0)/length(x)
@@ -229,6 +244,11 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 
 #Function to plot dot gene averages
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_dots
 plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),main="",assay="RNA",
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.2,show_axis=T,add_legend=T,...){
 
@@ -296,6 +316,11 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
 
 #Heatmap plot
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_heat
 plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, row.cex=1, main="", heat_color=c("grey90",colorRampPalette(c("grey80","navy","navy") )(90)),...){
   plot(0,type="n",ylim=c(0,1.105),xlim=c(0,1.25),col="white",axes=F,asp=F,main=main,xlab="",ylab="")
 
@@ -355,6 +380,11 @@ plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
 
 ###Gene expression barplots
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_bars
 plot_bars <- function(data, gene, clustering,assay="RNA",
                       col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
                       ...){
@@ -384,6 +414,11 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
 
 ###Gene expression barplots
 #---------------
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname barlist
 barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,labels=NULL,srt=0,orderby = NULL,
                     assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,
                     col = "default",draw_mean_lines=T,...){
@@ -498,7 +533,11 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname getcluster
 getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
 
   if(is(data,"Seurat")){
@@ -525,7 +564,11 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
 
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname pointcluster
 pointcluster <- function(a, gene, clustering, red="umap", cex=3,col="black",lowest=F){
   clust_use <- getcluster(a,gene,clustering,lowest)
   points(t(pmean(a@reductions[[red]]@cell.embeddings[a@meta.data[,clustering] == clust_use,])) ,
@@ -534,7 +577,11 @@ pointcluster <- function(a, gene, clustering, red="umap", cex=3,col="black",lowe
 
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_annotation_percentages
 add_annotation_percentages <- function(data,annotation_file,
                                        annotation_column_use="external_gene_name",
                                        annotation_column_target="gene_biotype",assay="RNA"){
@@ -565,6 +612,11 @@ add_annotation_percentages <- function(data,annotation_file,
 }
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_sankey
 plot_sankey <- function(df, plot_labels=T, plot_weights=T, color_by=1,
                         order_1_by="NULL", order_2_by="NULL",
                         xlim=c(0,1), ylim1=c(0,1), ylim2=c(0,1),
@@ -772,7 +824,11 @@ plot_sankey <- function(df, plot_labels=T, plot_weights=T, color_by=1,
 }
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_enrich
 plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
                         frame=F,axes=F,xlab="",ylab="", main=NULL,cex.main=1,font.main=1,...){
   rnk <- rank(-stats)
@@ -854,6 +910,12 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
 
 #Function to plot dot gene averages
 #---------------
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_dots_difference
 plot_dots_difference <- function(data, data2, genes, clustering, clustering2, pal=c("blue","navy","grey95","firebrick","red"),main="",assay="RNA",
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.5,show_axis=T,...){
   
@@ -947,7 +1009,11 @@ plot_dots_difference <- function(data, data2, genes, clustering, clustering2, pa
 
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_scale_legend
 add_scale_legend <- function(
   x      = par( "usr" )[2],
   y      = par( "usr" )[4],
@@ -980,6 +1046,11 @@ add_scale_legend <- function(
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_size_legend
 add_size_legend <- function(
   x      = par( "usr" )[2],
   y      = par( "usr" )[4] - diff(par( "usr" )[3:4])/3,

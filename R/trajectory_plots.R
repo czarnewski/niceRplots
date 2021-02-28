@@ -1,3 +1,9 @@
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_smoothers
 plot_smoothers <- function(seuratObject,
                            SlingshotCurves,
                            gene,

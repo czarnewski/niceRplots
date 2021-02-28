@@ -1,10 +1,8 @@
-#' @title Adds legend
-#' 
+
+#' @title Add Letter
 #' @description Adds text to the upperleft corner
-#' 
 #' @details Adds text to the upperleft corner. Usually a letter such as "a", "b", etc.
-#' 
-#' @export 
+#' @export
 #' @rdname add_letter
 #' @param label A letter to be added. Default: "a".
 #' @param cex The size of the text to be plotted. Default: 2.
@@ -13,7 +11,7 @@
 #' @param ... Other parameters passed to `text`
 #' @return nonsense
 #' 
-#' @examples 
+#' @examples
 #' # Adds a simple figure label
 #' plot(0)
 #' add_letter("a")
@@ -25,9 +23,6 @@
 #'   plot(0)
 #'   add_letter(figure_labels) ; figure_labels <- figure_labels[-1]
 #' }
-#' 
-#' 
-#' 
 add_letter <- function(label=NULL, cex=2, font=2, plot=T,...) {
   try({
     totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])

@@ -3,6 +3,13 @@ require(igraph)
 require(scales)
 require(RColorBrewer)
 
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_feat
 plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
                       bg=NA,font.labels=1,cex.labels=1,cex=.3,dims=c(1,2),mins=0,
                       add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,
@@ -61,6 +68,11 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_meta
 plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),font.labels=1,cex.labels=1, col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,...){
   fn <- feat
@@ -180,6 +192,12 @@ plot_meta2 <- function(data,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,
 
 
 
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_graph
 add_graph <- function(a,red,graph="RNA_snn",percent_connections=1){
   g <- graph_from_adjacency_matrix(a@graphs[[graph]],weighted = T,diag = F)
   g <- simplify(g)
@@ -209,6 +227,12 @@ add_graph <- function(a,red,graph="RNA_snn",percent_connections=1){
 # }
 
 
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_centroid_lines
 add_centroid_lines <- function(red,feat,pal,centroids){
   for(i in unique(feat)){
     df <- red[feat==i,]
@@ -222,6 +246,11 @@ add_centroid_lines <- function(red,feat,pal,centroids){
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_gene_cloud
 plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
   gtemp <- igraph::graph_from_adjacency_matrix(TOM[names(gene_module[ gene_module %in% mm ]),names(gene_module[ gene_module %in% mm ])],weighted = T,diag = F)
   l <- layout_nicely(gtemp)
@@ -231,6 +260,11 @@ plot_gene_cloud <- function(TOM, gene_module, mm, main=NULL,...){
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname pmean
 pmean <- function(x, steps=30, minf=.6){
   f <- 1
   if(is.vector(x)){
@@ -259,6 +293,11 @@ lower_sd <- function(x, mm=mean(x)){
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname plot_tree
 plot_tree <- function( data, slingshot_curves, gene, rotate90=F, assay="RNA",edge.weights=F,
                        pal=c("grey90","grey70","blue3","navy"),minsize=.5,sizefactor=2,...){
   g <- igraph::graph_from_adjacency_matrix( curves@adjacency, mode = "undirected")
@@ -301,6 +340,12 @@ plot_tree <- function( data, slingshot_curves, gene, rotate90=F, assay="RNA",edg
 
 
 
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname graph_abstraction
 graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0){
   
   clustering_use <- factor(data@meta.data[,clustering])
@@ -349,6 +394,11 @@ graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cut
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname empty_plot
 empty_plot <- function(...,main="",frame=F,xlab="",ylab="",cex.main=1,font.main=1){
   plot( c(0,1),c(0,1) , type="n", axes=F,
         main=main,frame=frame,xlab=xlab,ylab=ylab,cex.main=cex.main,font.main=font.main,...)
