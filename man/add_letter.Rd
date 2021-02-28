@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_fig_label.R
 \name{add_letter}
 \alias{add_letter}
-\title{Adds legend}
+\title{Add Letter}
 \usage{
 add_letter(label = NULL, cex = 2, font = 2, plot = T, ...)
 }
@@ -38,7 +38,4 @@ for(i in 1:4){
   plot(0)
   add_letter(figure_labels) ; figure_labels <- figure_labels[-1]
 }
-
-
-
 }
