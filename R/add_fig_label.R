@@ -45,6 +45,61 @@ add_letter <- function(label=NULL, cex=2, font=2, plot=T,...) {
 
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname inch2x
+inch2x <- function( x ){
+  scale_factor <- par("fin")[1] * (diff(par("plt")[c(1,2)]))
+  return( diff(range(par('usr'))) / scale_factor * x )}
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname inch2y
+inch2y <- function( x ){
+  scale_factor <- par("fin")[2] * (diff(par("plt")[c(3,4)]))
+  return( diff(range(par('usr'))) / scale_factor * x )}
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname add_corner_axis
+add_corner_axis <- function( xlab="", ylab="", cex=1){
+  text( par("usr")[1] , par("usr")[3] , adj=c(0,1.5), labels = xlab, xpd=T,cex=1)
+  text( par("usr")[1] , par("usr")[3] , adj=c(0,-0.5), labels = ylab, srt=90, xpd=T,cex=1)
+  sw <- max( c(strwidth(xlab, cex=cex,units = "in") , strwidth(ylab, cex=cex,units = "in") , .3) )
+  lines( par("usr")[c(1,1,1)] + c(0,0,inch2x(sw)), par("usr")[c(3,3,3)] + c(inch2y(sw),0,0), xpd=T , col="black" , lwd=1)}
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname compute_cluster_specificity
+compute_cluster_specificity <- function( data , clustering = "seurat_clusters", graph="RNA_snn" ){
+  mm <- as.matrix(model.matrix(~ 0 + data@meta.data[,clustering] ))
+  AAA <- as.matrix(data@graphs[[graph]]>0) %*% mm
+  own <- rowSums( AAA * mm )
+  other <- rowSums( AAA * (1 - mm) )+1
+  all <- rowSums( AAA  )+1
+  data@meta.data[,"self_connectivity"] <- own
+  data@meta.data[,"other_connectivity"] <- other
+  data@meta.data[,"all_conections"] <- all
+  data@meta.data[,"self_vs_other_ratio"] <- own/other
+  data@meta.data[,"self_vs_all_ratio"] <- own/all
+  data@meta.data[,"other_vs_all_ratio"] <- other/all
+  data@meta.data[,"other_vs_self_ratio"] <- other/own
+  
+  return(data)
+}
 # 
 # add_arrow <- function(side=1, w=.05, l=.05, invert=F, plot=T,col = "black",...) {
 #   totx <- (par("fin")[1] - par("mai")[2] - par("mai")[4])

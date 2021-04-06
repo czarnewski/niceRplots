@@ -23,7 +23,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
   } else {
     feat <- c(as.matrix(data))
     temp <- factor(c(sapply(colnames(data),function(x){rep(x,nrow(data))})),levels = colnames(data))
-    N <- nrow(data)
+    N <- ncol(data)
   }
 
   pt.col=rep( pt.col,N)[1:N]
@@ -54,14 +54,14 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
       #points(runif(sum(DATA@meta.data[,clustering] == cl),min = i-.4,max = i+.4),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey40")
       #points(rnorm(sum(DATA@meta.data[,clustering] == cl),mean = i,sd = .12),DATA@data[gene,DATA@meta.data[,clustering] == cl],cex=.3,pch=16,col="grey60")
     #}
-    x <- na.omit(feat[temp == cl])
+    x <- feat[temp == cl]
     suppressWarnings(suppressMessages( try(draw_violin(x, at = i,base=0.0,col = col[i],
                                                        smooth=smooth,
                                                        plot_points=plot_points,
                                                        method=method,
                                                        points_method=points_method,
                                                        transparency=transparency,
-               bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col,pt.cex=pt.cex,pt.pch=pt.pch)) ))
+               bw = bw,border =  "grey20",max_points=max_points,pt.col=pt.col[temp == cl],pt.cex=pt.cex,pt.pch=pt.pch)) ))
     #paste0(col_pal[i])
     #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
             #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
@@ -122,7 +122,10 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   # col <- col[as.factor(sort(unique(grouping)))]
 
   # temp <- factor(as.character(grouping))
-  temp <- grouping
+  if(!is.factor(grouping)){
+    temp <- factor(grouping)
+  } else {temp <- grouping }
+  
   if( !is.na(sum(as.numeric(levels(temp)))) ){
     temp <- factor(as.numeric(as.character(grouping))) }
 
@@ -146,7 +149,9 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
       #points(runif(sum(grouping == cl),min = i-.4,max = i+.4),DATA@data[gene,grouping == cl],cex=.3,pch=16,col="grey40")
       #points(rnorm(sum(grouping == cl),mean = i,sd = .12),DATA@data[gene,grouping == cl],cex=.3,pch=16,col="grey60")
       #}
-      x <- na.omit(feat[temp == cl]) / my_max
+      x <- (feat[temp == cl] - min(0,min(feat)) )/( my_max - min(0,min(feat)))
+      
+      # x <- na.omit(feat[temp == cl]) / my_max
 
       suppressWarnings(suppressMessages( try(draw_violin(x, base=panel_row+.02,at = i,col = col[i],
                                                          smooth=smooth,
@@ -168,13 +173,14 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   # if(plot_y_axis){
   #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
   # }
-    lines(c(0,n+.6),c(panel_row,panel_row),col="black",lwd=1,xpd=F)
+    lines(c(.4,n+.6),c(panel_row,panel_row),col="black",lwd=1,xpd=T)
   }
 
 
-  lines(c(0,n+.6),c(length(genes),length(genes)),col="white",lwd=6,xpd=T)
-  lines(c(n+.6,n+.6),c(0,length(genes)),col="white",lwd=6,xpd=T)
-  abline(h=-.1,v=.4,xpd=F,lwd=2)
+  # lines(c(0,n+.6),c(length(genes),length(genes)),col="white",lwd=6,xpd=T)
+  # lines(c(n+.6,n+.6),c(0,length(genes)),col="white",lwd=6,xpd=T)
+  lines(c(.4,.4),c(0,length(genes)),col="black",lwd=1,xpd=T)
+  # abline(h=-.1,v=.4,xpd=F,lwd=2)
   # if(plot_x_axis){
   #   axis(1, at=1:n, labels=sort(unique(grouping)),cex.axis=cex.axis)
   # }
@@ -210,22 +216,22 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
   }
 
   if(method == "uniform"){
-    a <- density(x,bw = .25*smooth,n = 200)
+    a <- density(x,bw = .25*smooth,n = 200,na.rm = T)
     ys <- a$x
     xs <- a$y/max(a$y)*bw/2
   }
 
   if(method == "log"){
     x2 <- log2(log2(x+1)+1)
-    a <- density(x2,bw = .05*smooth,n = 200)
+    a <- density(x2,bw = .05*smooth,n = 200,na.rm = T)
     ys <- 2^(2^a$x-1)-1
     xs <- a$y/max(a$y)*bw/2
   }
 
   if(method == "mixed"){
-    d1 <- density(x[x==0],bw = .01*smooth,n = 200)
+    d1 <- density(x[x==0],bw = .01*smooth,n = 200,na.rm = T)
     d1$y <- d1$y/max(d1$y)*(1-r)
-    d2 <- density(c(x[x!=0]),bw = .2,n = 200)
+    d2 <- density(c(x[x!=0]),bw = .2,n = 200,na.rm = T)
     d2$y <- d2$y/max(d2$y)*(r)
     ys <- c(d1$x,d2$x)
     xs <- c(d1$y,d2$y)*bw
@@ -262,7 +268,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
         return(feat <- data@meta.data[, x])
       }}
     )))
-  } else {grouping <- factor(clustering)}
+  } else {grouping <- clustering}
 
 
   temp <- factor(as.character(grouping))
@@ -330,9 +336,9 @@ plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
     for(i in annot){
       end <- begin + increment
       if(!is.null(order_metadata)){
-        annnn <- raster(matrix(as.numeric(data@meta.data[,i][order(data@meta.data[,order_metadata ])]),nrow = 1))
+        annnn <- rasterImage(matrix(as.numeric(data@meta.data[,i][order(data@meta.data[,order_metadata ])]),nrow = 1))
       } else {
-        annnn <- raster(matrix(as.numeric(data@meta.data[,i]),nrow = 1))
+        annnn <- rasterImage(matrix(as.numeric(data@meta.data[,i]),nrow = 1))
       }
       annnn@extent <- extent(c(0,1),c(begin,end))
       plot(annnn,col=hue_pal()(length(unique(data@meta.data[,i]) )),axes=F,asp=F,ylim=c(0,4),legend=F,add=T,interpolate=F)
@@ -370,7 +376,7 @@ plot_heat <- function(data, genes, order_metadata=NULL, annot=NULL, cut_max=2, r
   teeeeest[teeeeest < -2] <- cut_max
   #teeeeest <- t(apply(teeeeest , 1, function(x) (x - min(x)) / (max(x)-min(x)) ))
   #teeeeest[,1000] <- NA
-  plot(raster(teeeeest),col= heat_color,asp=F,axes=F,add=T,interpolate=F,...)
+  plot(rasterImage(teeeeest),col= heat_color,asp=F,axes=F,add=T,interpolate=F,...)
   text( 1.01 , (1:nrow(teeeeest)-.5)/nrow(teeeeest) , labels = rev(rownames(teeeeest)), srt = 0, adj = c(0,0.5), xpd = TRUE, cex=row.cex)
 
 }
@@ -488,7 +494,7 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 
     #par(mar=c(2,3,2,1))
     my_max <- max(c(feat,.00000001),na.rm = T)*1.1
-    x <- (na.omit(feat) / my_max)
+    x <- (feat - min(0,min(feat)) )/( my_max - min(0,min(feat)))
     barplot( x[o] , col=col, axes=F,
              border= col,
              names.arg="" , las=1, xaxs="i", yaxs="i",offset = panel_row,
@@ -550,7 +556,7 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
         return(feat <- data@meta.data[, x])
       }}
     )))
-  } else {grouping <- factor(clustering)}
+  }else{grouping <- clustering}
 
   data <- sapply(unique(as.character(grouping)),function(x){
     mean( data[ genes , as.character(grouping) == x ])
@@ -829,7 +835,7 @@ plot_sankey <- function(df, plot_labels=T, plot_weights=T, color_by=1,
 #' @details AAA
 #' @export
 #' @rdname plot_enrich
-plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
+plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,ylim=NULL,
                         frame=F,axes=F,xlab="",ylab="", main=NULL,cex.main=1,font.main=1,...){
   rnk <- rank(-stats)
   ord <- order(rnk)
@@ -854,7 +860,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,
   plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,cex.main=cex.main,font.main=font.main,
        main=ifelse(is.null(main),pathway_name,main),
        xlim=c(0,length(stats)),xaxs="i",yaxs="i",
-       ylim=c(-max(abs(range(toPlot$y))),max(abs(range(toPlot$y)))),
+       ylim= c(-max(abs(range(toPlot$y))),max(abs(range(toPlot$y)))) ,
        frame=frame,axes=axes,xlab=xlab,ylab=ylab,...)
   points(x=pathway,y=rep(0,length(pathway)),pch=73,xpd=T)
 #  lines(c(pathway[which.max(gseaRes$tops)],
@@ -1082,6 +1088,136 @@ add_size_legend <- function(
 }
 
 
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname load_RData
+load_RData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname read_gmt
+read_gmt <- function(gmt.file){
+  cell_markers <- read.delim(gmt.file,row.names = 1,header = F)
+  cell_markers <- apply(cell_markers , 1 , function(x) as.character(x[ (x!="") & !is.na(x) ]) )
+}
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname gmt_to_matrix
+gmt_to_matrix <- function(gmt){
+  all_features <- unique( unlist(gmt) )
+  gmt <- lapply(gmt, function(x) (all_features %in% x)*1 )
+  gmt <- as.matrix(as.data.frame(gmt))
+  rownames(gmt) <- all_features
+  return(gmt)
+}
+
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname annotate_clusters
+annotate_clusters <- function( data , 
+                               clustering , 
+                               annotation_list , 
+                               annotation_name = "cell_type", 
+                               sd_cutoff_1=1 , 
+                               sd_cutoff_2=1){
+  cell_markers_table <- gmt_to_matrix(cell_markers)
+  common <- rownames(cell_markers_table)
+  common <- common[common %in% rownames(data)]
+  
+  temp <- data@assays$RNA@counts[common,]
+  temp <- temp / (rowSums(temp)+1)
+  # temp <- t( t(temp) / (colSums(data@assays$RNA@counts)+1) )
+  res <- as.matrix(Matrix::t(Matrix::t(temp) %*% cell_markers_table[common,]))
+  # data@meta.data[,colnames(res)] <- res
+  
+  mm <- model.matrix(~ 0 + data@meta.data[,clustering] )
+  colnames(mm)<- levels(data@meta.data[,clustering])
+  res2 <- res %*% mm
+  res2 <- t( t(res2) / (1+colSums(mm)) )
+  res2 <- res2 / (1+rowSums(res2))
+  res2 <- t( t(res2) / (1+colSums(res2)) )
+  
+  cutoff <- sd_cutoff_1*sd(res2)
+  annotations <- sapply(colnames(res2),function(x) {
+    if(max(res2[,x]) < cutoff){
+      return("")
+    } else if( max(res2[,x]) > ( sd_cutoff_2*sd(res2[,x])) ){
+      return( rownames(res2) [which.max(res2[,x])] )
+    } else {
+      return("")
+    }
+  })
+  
+  data@meta.data[,annotation_name] <- annotations[ match( as.character(data$seurat_clusters) , names(annotations) ) ]
+  return(data)
+}
+
+
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname save_matrix_HDF5
+save_matrix_to_HDF5 <- function( matrix , file_name , feature_type="Gene Expression",genome="undefined"){
+  fn <- file_name
+  if( !is(matrix,"dgCMatrix") ) { matrix <- Matrix::Matrix(as.matrix(matrix),sparse = T)}
+  # file.remove(fn)
+  rhdf5::h5createFile(fn)
+  rhdf5::h5createGroup(fn,"matrix")
+  print("aaaa")
+  rhdf5::h5write(matrix@Dimnames[[2]],fn,"matrix/barcodes")
+  print("aaa123412")
+  rhdf5::h5write(matrix@x,fn,"matrix/data")
+  rhdf5::h5write(matrix@i,fn,"matrix/indices")
+  rhdf5::h5write(matrix@p,fn,"matrix/indptr")
+  rhdf5::h5write(matrix@Dim,fn,"matrix/shape")
+  print("bbbbb")
+  rhdf5::h5createGroup(fn,"matrix/features")
+  print("bbb12312")
+  rhdf5::h5write(matrix@Dimnames[[1]]
+                 ,fn,"matrix/features/name")
+  rhdf5::h5write(matrix@Dimnames[[1]]
+                 ,fn,"matrix/features/_all_tag_keys")
+  rhdf5::h5write(rep(feature_type,nrow(matrix)),
+                 fn,"matrix/features/feature_type")
+  
+  # mart <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl",host="jul2019.archive.ensembl.org")
+  # annot <- biomaRt::getBM(c("ensembl_gene_id","external_gene_name","gene_biotype","transcript_biotype","chromosome_name"),mart = mart)
+  # annot[match(rownames(matrix), annot$external_gene_name ) , "ensembl_gene_id"]
+  # rhdf5::h5write(annot[match(rownames(matrix), annot$external_gene_name ) , "ensembl_gene_id"],
+  #                fn,"matrix/features/id")
+  
+  rhdf5::h5write(matrix@Dimnames[[1]],
+                 fn,"matrix/features/id")
+  rhdf5::h5write(rep(genome,nrow(matrix))
+                 ,fn,"matrix/features/genome")
+  rhdf5::h5ls(fn)
+}
 
 
 
