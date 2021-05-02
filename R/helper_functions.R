@@ -21,10 +21,20 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
     temp <- factor(as.character(data@meta.data[,clustering]))
     N <- ncol(data)
   } else {
-    feat <- c(as.matrix(data))
-    temp <- factor(c(sapply(colnames(data),function(x){rep(x,nrow(data))})),levels = colnames(data))
+    if(is.null(gene)){
+      feat <- c(as.matrix(data))
+    } else{
+      feat <- data[gene,]
+    }
+    
+    if(is.null(clustering)){
+      temp <- factor(c(sapply(colnames(data),function(x){rep(x,nrow(data))})),levels = colnames(data))
+    } else{
+      temp <- as.factor(clustering)
+    }
     N <- ncol(data)
   }
+  
 
   pt.col=rep( pt.col,N)[1:N]
   pt.cex=rep(pt.cex,N)[1:N]
@@ -35,7 +45,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
 
   #par(mar=c(2,3,2,1))
   n <- length(levels(temp))
-  print(levels(temp))
+  
   my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
 
   plot(c(.4,n+.6),c(-1,-1), ylim=c(-.1,my_max),...,ylab="",type="n" ,frame.plot = F,
@@ -1182,23 +1192,19 @@ annotate_clusters <- function( data ,
 #' @description AAA
 #' @details AAA
 #' @export
-#' @rdname save_matrix_HDF5
+#' @rdname save_matrix_to_HDF5
 save_matrix_to_HDF5 <- function( matrix , file_name , feature_type="Gene Expression",genome="undefined"){
   fn <- file_name
   if( !is(matrix,"dgCMatrix") ) { matrix <- Matrix::Matrix(as.matrix(matrix),sparse = T)}
-  # file.remove(fn)
+  if( file.exists(fn) ){  file.remove(fn) }
   rhdf5::h5createFile(fn)
   rhdf5::h5createGroup(fn,"matrix")
-  print("aaaa")
   rhdf5::h5write(matrix@Dimnames[[2]],fn,"matrix/barcodes")
-  print("aaa123412")
   rhdf5::h5write(matrix@x,fn,"matrix/data")
   rhdf5::h5write(matrix@i,fn,"matrix/indices")
   rhdf5::h5write(matrix@p,fn,"matrix/indptr")
   rhdf5::h5write(matrix@Dim,fn,"matrix/shape")
-  print("bbbbb")
   rhdf5::h5createGroup(fn,"matrix/features")
-  print("bbb12312")
   rhdf5::h5write(matrix@Dimnames[[1]]
                  ,fn,"matrix/features/name")
   rhdf5::h5write(matrix@Dimnames[[1]]
@@ -1221,5 +1227,21 @@ save_matrix_to_HDF5 <- function( matrix , file_name , feature_type="Gene Express
 
 
 
-
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname read_h5_matrix
+read_h5_matrix <- function(x){
+  return( as(
+    Matrix::sparseMatrix(
+      i = h5read(x,name = "/matrix/indices"),
+      p = h5read(x,name = "/matrix/indptr"),
+      x = as.numeric(h5read(x,name = "/matrix/data")),
+      dims = h5read(x,name = "/matrix/shape"),
+      dimnames = list(h5read(x,name = "/matrix/features/_all_tag_keys"),
+                      h5read(x,name = "/matrix/barcodes"))
+    ), "dgCMatrix")
+  )
+}
 

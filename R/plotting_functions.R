@@ -15,15 +15,19 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
                       add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
                       col=c("grey90","grey80","grey60","navy","black"),add=F,frame=F,font.main=1,add_legend=T,cex.main=1,...){
   fn <- feat
-
-  if(feat %in% rownames(x@assays[[assay]]@data) ){
-    feat <- x@assays[[assay]]@data[feat,]
-  } else if(feat %in% colnames(x@meta.data) ) { feat <- as.numeric(x@meta.data[,feat])
-  } else { message("Feature or metadata not found!!")
-    feat <- rep(0,ncol(x))
+  if(is(x,"Seurat")){
+    red <- x@reductions[[red]]@cell.embeddings
+    if(feat %in% rownames(x@assays[[assay]]@data) ){
+      feat <- x@assays[[assay]]@data[feat,]
+    } else if(feat %in% colnames(x@meta.data) ) { feat <- as.numeric(x@meta.data[,feat])
+    } else { message("Feature or metadata not found!!")
+      feat <- rep(0,ncol(x))
+    }
+  } else {
+    feat <- x[feat,]
   }
 
-  if(is.null(mins)){mins <- 0}
+  if(is.null(mins)){mins <- min(c(feat,0),na.rm = T)}
   if(is.null(maxs)){maxs <- max(feat,na.rm = T)}
   
   if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- 0 }
@@ -39,11 +43,11 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
 
   #creates plot
   if(!add){
-  plot( x@reductions[[red]]@cell.embeddings[o,dims] ,xlab="",ylab="", type="n", xaxt="n",yaxt="n", frame=frame, font.main=font.main,cex.main=cex.main, main=ifelse( !is.null(main), main, paste0(fn)),...)
+  plot( red[o,dims] ,xlab="",ylab="", type="n", xaxt="n",yaxt="n", frame=frame, font.main=font.main,cex.main=cex.main, main=ifelse( !is.null(main), main, paste0(fn)),...)
 }
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=x@reductions[[red]]@cell.embeddings[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=red[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(!is.null(label) ){
@@ -51,13 +55,13 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
     if( !is.na(sum(as.numeric(levels(feat)))) ){
       labels <- factor(as.numeric(as.character(x@meta.data[[as.character(label)]])))}
     centroids <-  sapply( as.character(levels(labels)) ,
-                          red=x@reductions[[red]]@cell.embeddings[,dims],
+                          red=red[,dims],
                           cl1=labels,
                           function(jj,red,cl1) { pmean(red[cl1==jj,])  })
   }
 
   #adds points
-  points(x@reductions[[red]]@cell.embeddings[o,dims],pch=pch,cex=cex,bg=bg, col=paste0(pal) )
+  points(red[o,dims],pch=pch,cex=cex,bg=bg, col=paste0(pal) )
   options(warn=0)
 
   #adds labels
@@ -67,7 +71,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
     par(xpd=F)
   }
   
-  add_corner_axis(xlab=colnames(x@reductions[[red]]@cell.embeddings[,dims])[1],ylab=colnames(x@reductions[[red]]@cell.embeddings[,dims])[2])
+  add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
   
   if(add_legend){
     add_scale_legend(labels = c("min","max"),
@@ -87,35 +91,43 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),f
                       col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,add=F,frame=F,font.main=1,cex.main=1,...){
   fn <- feat
-  feat <- factor(as.character(x@meta.data[[feat]]))
-  if( !is.na(sum(as.numeric(levels(feat)))) ){
-    feat <- factor(as.numeric(as.character(x@meta.data[[fn]])))}
-  try(col <- colorRampPalette(col)( max( length(col) , length(unique(feat))) ))
-  cols <- col[feat]
+    if(is(x,"Seurat")){
+      red <- x@reductions[[red]]@cell.embeddings
+    feat <- factor(as.character(x@meta.data[[feat]]))
+    if( !is.na(sum(as.numeric(levels(feat)))) ){
+      feat <- factor(as.numeric(as.character(x@meta.data[[fn]])))}
+    try(col <- colorRampPalette(col)( max( length(col) , length(unique(feat))) ))
+    cols <- col[feat]
+  } else {
+    feat <- x[feat,]
+    try(col <- colorRampPalette(col)( max( length(col) , length(unique(feat))) ))
+    cols <- col[feat]
+  }
+    
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
 
   #creates plot
   if(!add){
-  plot( x@reductions[[red]]@cell.embeddings[,dims],xlab="",ylab="", type="n", xaxt="n",yaxt="n",font.main=font.main,cex.main=cex.main,main=ifelse( !is.null(main), main, paste0(fn)),frame=frame,...)
+  plot( red[,dims],xlab="",ylab="", type="n", xaxt="n",yaxt="n",font.main=font.main,cex.main=cex.main,main=ifelse( !is.null(main), main, paste0(fn)),frame=frame,...)
   }
 
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=x@reductions[[red]]@cell.embeddings[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=red[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(label | add_lines){
     centroids <-  sapply( as.character(levels(feat)) , 
-                          reds=as.data.frame(x@reductions[[red]]@cell.embeddings[,dims]), 
+                          reds=as.data.frame(red[,dims]), 
                           cl1=feat, function(jj,reds,cl1) { pmean(reds[cl1==jj,])  })
     }
 
   if(add_lines){
-    add_centroid_lines(x@reductions[[red]]@cell.embeddings[,dims],feat,cols,centroids)}
+    add_centroid_lines(red[,dims],feat,cols,centroids)}
 
   #adds points
-  points(x@reductions[[red]]@cell.embeddings[,dims],pch=pch,cex=cex,bg=paste0(col,90), col=cols )
+  points(red[,dims],pch=pch,cex=cex,bg=paste0(col,90), col=cols )
   options(warn=0)
 
   #adds labels
@@ -125,7 +137,7 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),f
     par(xpd=F)
   }
   
-  add_corner_axis(xlab=colnames(x@reductions[[red]]@cell.embeddings[,dims])[1],ylab=colnames(x@reductions[[red]]@cell.embeddings[,dims])[2])
+  add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
   
   legend(par("usr")[2],par("usr")[4],legend = levels(feat),
          pch=16,col=col, bty = "n",
@@ -464,7 +476,7 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,label=NULL,assay="Spatial
   }
   o <- order(feat,na.last = T)
   
-  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(10))[round(feat*9)+1][o], transparency )
+  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(90))[round(feat*89)+1][o], transparency )
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
   
