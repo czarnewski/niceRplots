@@ -1231,7 +1231,7 @@ save_matrix_to_HDF5 <- function( matrix , file_name , feature_type="Gene Express
 #' @description AAA
 #' @details AAA
 #' @export
-#' @rdname read_h5_matrix
+#' @rdname read_h5
 read_h5 <- function(x){
   return( Matrix::sparseMatrix(
     i = h5read(x,name = "/matrix/indices")+1,
