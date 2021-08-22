@@ -28,7 +28,10 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
   }
 
   if(is.null(mins)){mins <- min(c(feat,0),na.rm = T)}
-  if(is.null(maxs)){maxs <- max(feat,na.rm = T)}
+  if(is.null(maxs)){
+    maxs <- quantile(feat,0.99,na.rm = T)
+    if(maxs==0){maxs <- max(feat,na.rm = T)}
+  }
   
   if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- 0 }
   
@@ -37,7 +40,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
     feat[feat > 1] <- 1}
   o <- order(feat,na.last = T)
 
-  pal <- c( col[1],colorRampPalette(col[-1])(10))[round(feat*9)+1][o]
+  pal <- c( col[1],colorRampPalette(col[-1])(99))[round(feat*98)+1][o]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
 
@@ -75,7 +78,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
   
   if(add_legend){
     add_scale_legend(labels = c("min","max"),
-                     pal = c( col[1],colorRampPalette(col[-1])(10)))
+                     pal = c( col[1],colorRampPalette(col[-1])(98)))
   }
 }
 
@@ -380,37 +383,41 @@ plot_tree <- function( data, slingshot_curves, gene, rotate90=F, assay="RNA",edg
 #' @details AAA
 #' @export
 #' @rdname graph_abstraction
-graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0){
+graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0, nn=0){
   
   clustering_use <- factor(data@meta.data[,clustering])
   mm <- model.matrix( ~ 0 + clustering_use )
   colnames(mm) <- levels(clustering_use)
   
-  res <- data@graphs[[graph]]
-  # res <- res %*% Matrix::t(res)
-  res <- res %*% mm
-  res <- as.matrix(Matrix::t(res) %*% mm)
-  res <- res / c(table(clustering_use))
-  res <- t(res) / c(table(clustering_use))
-  # res[res < cutoff ] <- 0
-
-  res <- data.frame(s=c(sapply(colnames(res),res=res,function(x,res) rep(x,nrow(res)))),
-                    p.Var=rep( rownames(res) , ncol(res)),
-                    p.Freq= c(res) )
-  # g <- graph_from_adjacency_matrix(data@graphs[[graph]],weighted = T,diag = F)
-  # g <- simplify(g)
-  # eee <- as.data.frame(as_edgelist(g))
-  # eee$g1 <- clustering_use[ match(eee[,1],colnames(data)) ]
-  # eee$g2 <- clustering_use[ match(eee[,2],colnames(data)) ]
+  # res <- data@graphs[[graph]]
+  # # res <- res %*% Matrix::t(res)
+  # res <- res %*% mm
+  # res <- as.matrix(Matrix::t(res) %*% mm)
+  # res <- res / c(table(clustering_use))
+  # res <- t(res) / c(table(clustering_use))
+  # # res[res < cutoff ] <- 0
   # 
-  # res <- data.frame()
-  # for(k in levels(clustering_use)){
-  #   temp <- table(eee[eee$g1 == k,"g2"])
-  #   # temp <- temp / table(clustering_use)
-  #   temp <- temp/sum(temp)
-  #   temp[temp < cutoff] <- 0
-  #   res <- rbind(res, data.frame(s=k,p=temp))
-  # }
+  # res <- data.frame(s=c(sapply(colnames(res),res=res,function(x,res) rep(x,nrow(res)))),
+  #                   p.Var=rep( rownames(res) , ncol(res)),
+  #                   p.Freq= c(res) )
+  g <- graph_from_adjacency_matrix(data@graphs[[graph]],weighted = T,diag = F)
+  g <- simplify(g)
+  eee <- as.data.frame(as_edgelist(g))
+  eee$g1 <- clustering_use[ match(eee[,1],colnames(data)) ]
+  eee$g2 <- clustering_use[ match(eee[,2],colnames(data)) ]
+  # 
+  res <- data.frame()
+  for(k in levels(clustering_use)){
+    temp <- table(eee[eee$g1 == k,"g2"])
+    temp <- temp / table(clustering_use)
+    temp <- temp / sum(temp)
+    if(nn > 0){
+      nn2 <- sort(temp,decreasing = T)[nn]
+      temp[temp < nn2] <- 0
+    }
+    temp[temp < cutoff] <- 0
+    res <- rbind(res, data.frame(s=k,p=temp))
+  }
   
   centroids <-  t(sapply( as.character(unique(clustering_use)) ,
                           red=data@reductions[[red]]@cell.embeddings,
@@ -448,10 +455,10 @@ empty_plot <- function(...,main="",frame=F,xlab="",ylab="",cex.main=1,font.main=
 #' @details AAA
 #' @export
 #' @rdname plot_spatial_feat
-plot_spatial_feat <- function(x,red="slice1",feat=NULL,label=NULL,assay="Spatial",plot_tissue=T,rescale=T,transparency="",pch=16,
+plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,assay="Spatial",plot_tissue=T,rescale=T,transparency="",pch=16,
                               bg=NA,font.labels=1,cex.labels=1,cex=1,mins=NULL,
                               add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
-                              col=c("grey90","grey80","navy","black"),...){
+                              col=c("grey95","grey70","navy","black"),...){
   fn <- feat
   
   if(feat %in% rownames(x@assays[[assay]]@data) ){
@@ -462,13 +469,18 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,label=NULL,assay="Spatial
   }
   
   if(is.null(mins)){mins <- 0}
-  if(is.null(maxs)){maxs <- max(feat,na.rm = T)}
+  if(is.null(maxs)){
+    maxs <- sort(feat,decreasing = T)[min(5,length(feat[feat!=0]))]
+    
+    if(maxs==0){ maxs <- max(feat,na.rm = T) }
+    }
   
   if( sum(is.na(feat)) > 0 ){ feat[is.na(feat)] <- mins }
   
   if(max(feat,na.rm = T) != 0){
     if(rescale){
       feat <- (feat - mins) / ( maxs - mins)
+      feat[is.na(feat)] <- 0
       feat[feat > 1] <- 1
     } else {
       feat <- feat / max(x@assays[[assay]]@data)
@@ -476,14 +488,14 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,label=NULL,assay="Spatial
   }
   o <- order(feat,na.last = T)
   
-  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(90))[round(feat*89)+1][o], transparency )
+  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(99))[round(feat*99)+1][o], transparency )
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
   
   #creates plot
   coo <- x@images$slice1@coordinates
-  coo$imagecol <- coo$imagecol*x@images$slice1@scale.factors$lowres
-  coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$lowres
+  coo$imagecol <- coo$imagecol*x@images$slice1@scale.factors$hires
+  coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$hires
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
   empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",

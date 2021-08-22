@@ -132,13 +132,12 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   # col <- col[as.factor(sort(unique(grouping)))]
 
   # temp <- factor(as.character(grouping))
-  if(!is.factor(grouping)){
-    temp <- factor(grouping)
-  } else {temp <- grouping }
   
-  if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(grouping))) }
-
+  if( !is.factor(grouping) ){
+    temp <- factor(as.character(grouping))
+    if( !is.na(sum(as.numeric(levels(temp)))) ){
+      temp <- factor(as.numeric(as.character(grouping))) }
+  }
   panel_row <- length(genes)
   for(gene in genes){
     panel_row <- panel_row - 1
@@ -269,7 +268,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.2,show_axis=T,add_legend=T,...){
 
   if(is(data,"Seurat")){
-    grouping <- data@meta.data[,clustering]
+    temp <- data@meta.data[,clustering]
     
     data <- t(as.data.frame(sapply(genes,function(x){
       if(x %in% rownames(data@assays[[assay]]@data) ){
@@ -278,19 +277,24 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
         return(feat <- data@meta.data[, x])
       }}
     )))
-  } else {grouping <- clustering}
+  } else {temp <- clustering}
 
 
-  temp <- factor(as.character(grouping))
-  if( !is.na(sum(as.numeric(levels(temp)))) ){
-    temp <- factor(as.numeric(as.character(grouping))) }
-
-  x1 <- rowsum(t(as.matrix(data[rev(genes),])), temp)
-  x1 <- t(x1 / c(table(temp)))
+  if( !is.factor(temp) ){
+    temp <- factor(as.character(temp))
+    if( !is.na(sum(as.numeric(levels(temp)))) ){
+      temp <- factor(as.numeric(as.character(temp))) }
+  }
+  
+  x1 <- rowsum(t(as.matrix(data[rev(genes),])), as.character(temp))
+  x1 <- t(x1[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
   x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
+  # x1 <- x1[,as.numeric(as.character(levels(temp)))]
 
-  x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
-  x2 <- t(x2 / c(table(temp)))
+  # x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
+  x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), as.character(temp))
+  x2 <- t(x2[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
+  # x1 <- x2[,as.numeric(as.character(levels(temp)))]
 
 
   plot(0,0,type="n",las=1,xlim=c(.5,ncol(x1)+.5),ylim=c(.5,nrow(x1)+.5),
@@ -451,7 +455,14 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
         return(feat <- data@meta.data[, x])
       }}
     )))
-  } else {grouping <- factor(clustering)}
+  } else {grouping <- clustering}
+  
+  
+  if( !is.factor(grouping) ){
+    grouping <- factor(as.character(grouping))
+    if( !is.na(sum(as.numeric(levels(grouping)))) ){
+      grouping <- factor(as.numeric(as.character(grouping))) }
+  }
   
   data[is.na(data)] <- 0
 
