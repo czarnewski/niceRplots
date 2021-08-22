@@ -10,10 +10,10 @@ require(RColorBrewer)
 #' @details AAA
 #' @export
 #' @rdname plot_feat
-plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
+plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,add_corner_axis=F,
                       bg=NA,font.labels=1,cex.labels=1,cex=.3,dims=c(1,2),mins=NULL,
                       add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
-                      col=c("grey90","grey80","grey60","navy","black"),add=F,frame=F,font.main=1,add_legend=T,cex.main=1,...){
+                      col=c("grey90","grey80","grey60","navy","black"),add=F,frame=F,font.main=1,add_legend=F,cex.main=1,...){
   fn <- feat
   if(is(x,"Seurat")){
     red <- x@reductions[[red]]@cell.embeddings
@@ -73,8 +73,10 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
     text(centroids[1,],centroids[2,],labels = levels(labels),cex=cex.labels,font=font.labels,xpd=T)
     par(xpd=F)
   }
+  if(add_corner_axis){
+    add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
+   }
   
-  add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
   
   if(add_legend){
     add_scale_legend(labels = c("min","max"),
@@ -90,7 +92,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,
 #' @details AAA
 #' @export
 #' @rdname plot_meta
-plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),font.labels=1,cex.labels=1, 
+plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),font.labels=1,cex.labels=1, add_legend=F,add_corner_axis=F,
                       col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,add=F,frame=F,font.main=1,cex.main=1,...){
   fn <- feat
@@ -139,14 +141,15 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),f
     text(centroids[1,],centroids[2,],labels = levels(feat),cex=cex.labels,font=font.labels,xpd=T)
     par(xpd=F)
   }
-  
-  add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
-  
+   if(add_corner_axis){
+    add_corner_axis(xlab=colnames(red[,dims])[1],ylab=colnames(red[,dims])[2])
+   }
+  if(add_legend){
   legend(par("usr")[2],par("usr")[4],legend = levels(feat),
          pch=16,col=col, bty = "n",
          cex = 1, pt.cex = 1,xjust = 0,yjust = 1,
          title.adj = 1,xpd=T,y.intersp = .7)
-  
+  }
 }
 
 
