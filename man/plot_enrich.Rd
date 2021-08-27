@@ -9,6 +9,7 @@ plot_enrich(
   gmt,
   stats,
   enrichment_table = NULL,
+  ylim = NULL,
   frame = F,
   axes = F,
   xlab = "",

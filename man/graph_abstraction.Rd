@@ -4,7 +4,14 @@
 \alias{graph_abstraction}
 \title{AAA}
 \usage{
-graph_abstraction(data, red = "umap", clustering, graph = "SNN", cutoff = 0)
+graph_abstraction(
+  data,
+  red = "umap",
+  clustering,
+  graph = "SNN",
+  cutoff = 0,
+  nn = 0
+)
 }
 \description{
 AAA
