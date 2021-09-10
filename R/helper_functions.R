@@ -294,7 +294,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
   # x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
   x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), as.character(temp))
   x2 <- t(x2[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
-  x1 <- x2[,levels(temp))]
+  x1 <- x2[,levels(temp)]
 
 
   plot(0,0,type="n",las=1,xlim=c(.5,ncol(x1)+.5),ylim=c(.5,nrow(x1)+.5),
