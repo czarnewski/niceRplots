@@ -402,7 +402,7 @@ empty_plot <- function(...,main="",frame=F,xlab="",ylab="",cex.main=1,font.main=
 #' @export
 #' @rdname plot_spatial_feat
 plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,assay="Spatial",plot_tissue=T,rescale=T,transparency="",pch=16,
-                              bg=NA,font.labels=1,cex.labels=1,cex=1,mins=NULL,
+                              bg=NA,font.labels=1,cex.labels=1,cex=1,mins=NULL,add=F,
                               add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
                               col=c("grey95","grey70","navy","black"),...){
   fn <- feat
@@ -434,7 +434,8 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
   }
   o <- order(feat,na.last = T)
 
-  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(99))[round(feat*99)+1][o], transparency )
+  pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(99)),transparency)
+  pal <- pal[round(feat*99)+1][o]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
 
@@ -444,8 +445,11 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
   coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$hires
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
-  empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
-             main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
+  if(!add){
+    plot.new()
+    empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
+               main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
+  }
   if(plot_tissue){
     rasterImage(x@images$slice1@image,1,1,dim(x@images$slice1@image)[2],dim(x@images$slice1@image)[1])
   }
@@ -488,7 +492,7 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
 #' @rdname plot_spatial_meta
 plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T,plot_tissue=T,pch=16,cex=1,label=F,dims=c(1,2),font.labels=1,cex.labels=1, bg=NA,
                               col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
-                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,transparency="",...){
+                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,transparency="",add=F,...){
   fn <- feat
   feat <- factor(as.character(x@meta.data[[feat]]))
   if( !is.na(sum(as.numeric(levels(feat)))) ){
@@ -504,13 +508,15 @@ plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T
   coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$lowres
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
-  empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
-             main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
+  if(!add){
+    plot.new()
+    empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
+               main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
+  }
+
   if(plot_tissue){
     rasterImage(x@images$slice1@image,1,1,dim(x@images$slice1@image)[2],dim(x@images$slice1@image)[1])
   }
-
-
 
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
