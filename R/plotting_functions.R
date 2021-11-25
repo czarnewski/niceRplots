@@ -432,6 +432,8 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
       feat <- feat / max(x@assays[[assay]]@data)
     }
   }
+
+  feat <- feat [ colnames(x) %in%  rownames(x@images[[red]]@coordinates) ]
   o <- order(feat,na.last = T)
 
   pal <- paste0(c( colorRampPalette(col[1])(1),colorRampPalette(col[-1])(99)),transparency)
@@ -440,18 +442,18 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
   options(warn=-1)
 
   #creates plot
-  coo <- x@images$slice1@coordinates
-  coo$imagecol <- coo$imagecol*x@images$slice1@scale.factors$hires
-  coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$hires
+  coo <- x@images[[red]]@coordinates
+  coo$imagecol <- coo$imagecol*x@images[[red]]@scale.factors$hires
+  coo$imagerow <- dim(x@images[[red]]@image)[1] - coo$imagerow*x@images[[red]]@scale.factors$hires
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
   if(!add){
-    plot.new()
+    # plot.new()
     empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
                main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
   }
   if(plot_tissue){
-    rasterImage(x@images$slice1@image,1,1,dim(x@images$slice1@image)[2],dim(x@images$slice1@image)[1])
+    rasterImage(x@images[[red]]@image,1,1,dim(x@images[[red]]@image)[2],dim(x@images[[red]]@image)[1])
   }
   # plot( x@reductions[[red]]@cell.embeddings[o,dims] , type="n", xaxt="n",yaxt="n", main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
 
@@ -494,28 +496,29 @@ plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T
                               col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
                       add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,transparency="",add=F,...){
   fn <- feat
-  feat <- factor(as.character(x@meta.data[[feat]]))
+  feat <- x@meta.data[[feat]]
   if( !is.na(sum(as.numeric(levels(feat)))) ){
     feat <- factor(as.numeric(as.character(x@meta.data[[fn]])))}
+  feat <- feat [ colnames(x) %in% rownames(x@images[[red]]@coordinates) ]
   try(col <- paste0(colorRampPalette(col)( max( length(col) , length(levels(feat))) ),transparency) )
   col <- col[feat]
   #par(mar=c(1.5,1.5,1.5,1.5))
   options(warn=-1)
 
   #creates plot
-  coo <- x@images$slice1@coordinates
-  coo$imagecol <- coo$imagecol*x@images$slice1@scale.factors$lowres
-  coo$imagerow <- dim(x@images$slice1@image)[1] - coo$imagerow*x@images$slice1@scale.factors$lowres
+  coo <- x@images[[red]]@coordinates
+  coo$imagecol <- coo$imagecol*x@images[[red]]@scale.factors$lowres
+  coo$imagerow <- dim(x@images[[red]]@image)[1] - coo$imagerow*x@images[[red]]@scale.factors$lowres
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
   if(!add){
-    plot.new()
+    # plot.new()
     empty_plot(xlim=spot_col_lims+c(-5,5), ylim=spot_row_lims+c(-5,5),frame=F,yaxs="i",xaxs="i",
                main=ifelse( !is.null(main), main, paste0(assay,"_",fn)),...)
   }
 
   if(plot_tissue){
-    rasterImage(x@images$slice1@image,1,1,dim(x@images$slice1@image)[2],dim(x@images$slice1@image)[1])
+    rasterImage(x@images[[red]]@image,1,1,dim(x@images[[red]]@image)[2],dim(x@images[[red]]@image)[1])
   }
 
   #adds underlying graph
