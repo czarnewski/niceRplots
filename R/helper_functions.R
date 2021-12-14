@@ -610,10 +610,10 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
 
   mm <- Matrix::sparse.model.matrix( ~ 0 + temp )
   colnames(mm) <- levels(temp)
-  totals <- colSums(mm) ; totals[totals == 0] <- 1
+  totals <- Matrix::colSums(mm) ; totals[totals == 0] <- 1
 
   x1 <- data %*% mm
-  x1 <- t( t(x1) / totals )
+  x1 <- Matrix::t( Matrix::t(x1) / totals )
   max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
 
   if(lowest){
