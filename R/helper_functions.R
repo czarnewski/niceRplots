@@ -286,15 +286,32 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
       temp <- factor(as.numeric(as.character(temp))) }
   }
 
-  x1 <- rowsum(t(as.matrix(data[rev(genes),])), as.character(temp))
-  x1 <- t(x1[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
-  x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
-  # x1 <- x1[,levels(temp)]
 
-  # x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
-  x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), as.character(temp))
-  x2 <- t(x2[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
-  # x1 <- x2[,levels(temp)]
+
+
+  mm <- Matrix::sparse.model.matrix( ~ 0 + temp )
+  colnames(mm) <- levels(temp)
+  totals <- colSums(mm) ; totals[totals == 0] <- 1
+
+  x1 <- data %*% mm
+  x1 <- t( t(x1) / totals )
+  max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
+  x1 <- x1 / max1
+
+  x2 <- (data>0) %*% mm
+  x2 <- t( t(x2) / totals )
+  dim(x2)
+
+#
+#   x1 <- rowsum(t(as.matrix(data[rev(genes),])), as.character(temp))
+#   x1 <- t(x1[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
+#   x1 <- t(apply(t(x1) , 2,function(i) (i-0)/(max(i)-0) ) )
+#   # x1 <- x1[,levels(temp)]
+#
+#   # x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), temp)
+#   x2 <- rowsum(( t (as.matrix(data[rev(genes),]!=0)) *1), as.character(temp))
+#   x2 <- t(x2[as.character(levels(temp)),] / c(table(temp)[as.character(levels(temp))]))
+#   # x1 <- x2[,levels(temp)]
 
 
   plot(0,0,type="n",las=1,xlim=c(.5,ncol(x1)+.5),ylim=c(.5,nrow(x1)+.5),
@@ -308,14 +325,20 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
       lines(c(0,length(levels(temp) )+0.5),c(i,i),col="grey95",lwd=.5,xpd=F)
     }
   }
+  ys <- rep(nrow(x2):1,ncol(x2))
+  xs <- sapply(1:ncol(x2),function(x){rep(x,nrow(x2))})
 
-  points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
-         pch=16, col=c( "grey95",colorRampPalette(pal)(19))[c(t(x1) )*18+1 ],xpd=T)
+  heatpal <- c( "grey95",colorRampPalette(pal)(19))[ as.numeric( x1 )*18+1 ]
+  points(xs,ys,col=heatpal, pch=16,cex=as.numeric( x2 )*2+min_size,xpd=T)
+
+
+  # points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
+  #        pch=16, col=c( "grey95",colorRampPalette(pal)(19))[c(t(x1) )*18+1 ],xpd=T)
 
   text(1:ncol(x1), par("usr")[3] - (par("usr")[4])/200, labels = colnames(x1), srt = srt,
        adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),
        xpd = TRUE, cex=cex.col)
-  text(par("usr")[1] - (par("usr")[2])/200, 1:nrow(x1) , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
+  text(par("usr")[1] - (par("usr")[2])/200, nrow(x1):1 , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
 
   if(show_axis){
     lines(c(.5,.5),c(.5,nrow(x1)+.5),col="black",lwd=1,xpd=T)
@@ -568,7 +591,7 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
 
   if(is(data,"Seurat")){
-    grouping <- data@meta.data[,clustering]
+    temp <- data@meta.data[,clustering]
 
     data <- t(as.data.frame(sapply(genes,function(x){
       if(x %in% rownames(data@assays[[assay]]@data) ){
@@ -577,16 +600,30 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
         return(feat <- data@meta.data[, x])
       }}
     )))
-  }else{grouping <- clustering}
+  } else {temp <- clustering}
 
-  data <- sapply(unique(as.character(grouping)),function(x){
-    mean( data[ genes , as.character(grouping) == x ])
-  })
-  if(lowest){
-    return( unique(as.character(grouping))[which.min(data)] )
-  } else {
-    return( unique(as.character(grouping))[which.max(data)] )
+  if( !is.factor(temp) ){
+    temp <- factor(as.character(temp))
+    if( !is.na(sum(as.numeric(levels(temp)))) ){
+      temp <- factor(as.numeric(as.character(temp))) }
   }
+
+  mm <- Matrix::sparse.model.matrix( ~ 0 + temp )
+  colnames(mm) <- levels(temp)
+  totals <- colSums(mm) ; totals[totals == 0] <- 1
+
+  x1 <- data %*% mm
+  x1 <- t( t(x1) / totals )
+  max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
+
+  if(lowest){
+    res <- apply(x1,1,function(x) levels(temp)[which.min(x)] )
+  } else {
+    res <- apply(x1,1,function(x) levels(temp)[which.max(x)] )
+  }
+  res <- factor( res , levels = levels(temp))
+
+  return(res)
 }
 
 
