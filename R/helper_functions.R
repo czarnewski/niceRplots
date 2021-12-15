@@ -1,4 +1,3 @@
-require(scales)
 
 
 #MAIN Violin plot function
@@ -268,15 +267,13 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
                       srt=0,cex.row=1,cex.col=1,show_grid=T,min_size=.2,show_axis=T,add_legend=T,...){
 
   if(is(data,"Seurat")){
-    temp <- data@meta.data[,clustering]
-
-    data <- t(as.data.frame(sapply(genes,function(x){
-      if(x %in% rownames(data@assays[[assay]]@data) ){
-        return(data@assays[[assay]]@data[x,])
-      } else if(x %in% colnames(data@meta.data) ) {
-        return(feat <- data@meta.data[, x])
-      }}
-    )))
+    temp <- Seurat::FetchData( object = data ,
+                               vars = clustering )[,1]
+    data <- Seurat::FetchData( object = data ,
+                               vars = genes , 
+                               slot = "data" )
+    data <- Matrix::t( Matrix::Matrix( as.matrix(data) , sparse = T) )
+    
   } else {temp <- clustering}
 
 
@@ -286,20 +283,17 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
       temp <- factor(as.numeric(as.character(temp))) }
   }
 
-
-
-
   mm <- Matrix::sparse.model.matrix( ~ 0 + temp )
   colnames(mm) <- levels(temp)
-  totals <- colSums(mm) ; totals[totals == 0] <- 1
+  totals <- Matrix::colSums(mm) ; totals[totals == 0] <- 1
 
   x1 <- data %*% mm
-  x1 <- t( t(x1) / totals )
+  x1 <- Matrix::t( Matrix::t(x1) / totals )
   max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
   x1 <- x1 / max1
 
   x2 <- (data>0) %*% mm
-  x2 <- t( t(x2) / totals )
+  x2 <- Matrix::t( Matrix::t(x2) / totals )
   dim(x2)
 
 #
@@ -582,6 +576,31 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 #---------------
 
 
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname fetch_data
+fetch_data <- function( data , features , cells=T , lowest=F , slot = "data" ){
+  if(is(data,"Seurat")){
+    # 
+    # # Fetch from assay
+    # m1 <- try(slot( data@assays[[assay]] , slot )[ , cells ],silent = T)
+    # m1 <- try(m1[ rownames(m1) %in% features , ],silent = T)
+    # print(head(m1))
+    # 
+    # # Fetch from meta.data
+    # m2 <- try(data@meta.data[ , colnames(data@meta.data) %in% features ],silent = T)
+    # print(head(m2))
+    
+    return( Seurat::FetchData( object = data ,
+                       vars = features , slot = slot ))
+  
+  }
+}
+
+
+
 
 #' @title AAA
 #' @description AAA
@@ -589,18 +608,15 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 #' @export
 #' @rdname getcluster
 getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
-
   if(is(data,"Seurat")){
-    temp <- data@meta.data[,clustering]
-
-    data <- t(as.data.frame(sapply(genes,function(x){
-      if(x %in% rownames(data@assays[[assay]]@data) ){
-        return(data@assays[[assay]]@data[x,])
-      } else if(x %in% colnames(data@meta.data) ) {
-        return(feat <- data@meta.data[, x])
-      }}
-    )))
-  } else {temp <- clustering}
+    temp <- Seurat::FetchData( object = data ,
+                               vars = clustering )[,1]
+    data <- Seurat::FetchData( object = data ,
+                               vars = genes , 
+                               slot = "data" )
+    data <- Matrix::t( Matrix::Matrix( as.matrix(data) , sparse = T) )
+    
+  } else { temp <- clustering }
 
   if( !is.factor(temp) ){
     temp <- factor(as.character(temp))
@@ -615,13 +631,15 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
   x1 <- data %*% mm
   x1 <- Matrix::t( Matrix::t(x1) / totals )
   max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
+  
+  ltemp <- levels(temp)
 
   if(lowest){
-    res <- apply(x1,1,function(x) levels(temp)[which.min(x)] )
+    res <- apply(x1,1,function(x) ltemp[which.min(x)] )
   } else {
-    res <- apply(x1,1,function(x) levels(temp)[which.max(x)] )
+    res <- apply(x1,1,function(x) ltemp[which.max(x)] )
   }
-  res <- factor( res , levels = levels(temp))
+  res <- factor( res , levels = ltemp)
 
   return(res)
 }
