@@ -254,8 +254,6 @@ draw_violin <- function(x,base=0,method="log",plot_points=F,points_method="propo
 #---------------
 
 
-
-
 #Function to plot dot gene averages
 #---------------
 #' @title AAA
@@ -270,10 +268,10 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
     temp <- Seurat::FetchData( object = data ,
                                vars = clustering )[,1]
     data <- Seurat::FetchData( object = data ,
-                               vars = genes , 
+                               vars = genes ,
                                slot = "data" )
     data <- Matrix::t( Matrix::Matrix( as.matrix(data) , sparse = T) )
-    
+
   } else {temp <- clustering}
 
 
@@ -583,19 +581,19 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
 #' @rdname fetch_data
 fetch_data <- function( data , features , cells=T , lowest=F , slot = "data" ){
   if(is(data,"Seurat")){
-    # 
+    #
     # # Fetch from assay
     # m1 <- try(slot( data@assays[[assay]] , slot )[ , cells ],silent = T)
     # m1 <- try(m1[ rownames(m1) %in% features , ],silent = T)
     # print(head(m1))
-    # 
+    #
     # # Fetch from meta.data
     # m2 <- try(data@meta.data[ , colnames(data@meta.data) %in% features ],silent = T)
     # print(head(m2))
-    
+
     return( Seurat::FetchData( object = data ,
                        vars = features , slot = slot ))
-  
+
   }
 }
 
@@ -612,10 +610,10 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
     temp <- Seurat::FetchData( object = data ,
                                vars = clustering )[,1]
     data <- Seurat::FetchData( object = data ,
-                               vars = genes , 
+                               vars = genes ,
                                slot = "data" )
     data <- Matrix::t( Matrix::Matrix( as.matrix(data) , sparse = T) )
-    
+
   } else { temp <- clustering }
 
   if( !is.factor(temp) ){
@@ -631,7 +629,7 @@ getcluster <- function(data, genes, clustering, lowest=F,assay="RNA"){
   x1 <- data %*% mm
   x1 <- Matrix::t( Matrix::t(x1) / totals )
   max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
-  
+
   ltemp <- levels(temp)
 
   if(lowest){
@@ -931,7 +929,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,ylim=NULL,
   xs <- as.vector(rbind(pathway - 1, pathway))
   ys <- as.vector(rbind(bottoms, tops))
   toPlot <- data.frame(x = c(0, xs, n + 1), y = c(0, ys, 0))
-  diff <- (max(tops) - min(bottoms))/8
+  diff <- (max(tops,1,na.rm = T) - min(bottoms,-1,na.rm = T))/8
 
   plot(toPlot,type="l",col="darkgreen",lwd=2, las=1,cex.main=cex.main,font.main=font.main,
        main=ifelse(is.null(main),pathway_name,main),
