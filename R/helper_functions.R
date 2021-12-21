@@ -942,7 +942,7 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,ylim=NULL,
 #        c(0,gseaRes$res),lty=2,col="grey")
 
   if(!is.null(enrichment_table)){
-    text(length(stats),gseaRes$res,adj=c(1,1),
+    text(length(stats),max(abs(range(toPlot$y))),adj=c(1,1),
          labels = paste0("p=",round(enrichment_table$pval[enrichment_table$pathway == pathway_name],5),
                          "\nNES=",round(enrichment_table$NES[enrichment_table$pathway == pathway_name],3),
                          "\nES=",round(enrichment_table$ES[enrichment_table$pathway == pathway_name],3) ) )
