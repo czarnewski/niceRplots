@@ -98,7 +98,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
 #' @details AAA
 #' @export
 #' @rdname violist
-violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.5,method="log",points_method="proportional",srt=0,transparency=NULL,
+violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.2,method="uniform",points_method="proportional",srt=0,transparency=NULL,
                     pt.col="grey",
                     pt.cex=.5,
                     pt.pch=16,
@@ -114,7 +114,10 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
         return(feat <- data@meta.data[, x])
       }}
     )))
-  } else {grouping <- factor(clustering)}
+  } else {
+    data <- data[ genes[ genes %in% rownames(data) ] ,]
+    grouping <- clustering
+  }
 
 
   n <- length(unique(grouping))
@@ -130,12 +133,12 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   col <- colorRampPalette(col)(length(col))
   # col <- col[as.factor(sort(unique(grouping)))]
 
-  # temp <- factor(as.character(grouping))
-
   if( !is.factor(grouping) ){
     temp <- factor(as.character(grouping))
     if( !is.na(sum(as.numeric(levels(temp)))) ){
       temp <- factor(as.numeric(as.character(grouping))) }
+  } else {
+    temp <- grouping
   }
   panel_row <- length(genes)
   for(gene in genes){
@@ -272,7 +275,10 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
                                slot = "data" )
     data <- Matrix::t( Matrix::Matrix( as.matrix(data) , sparse = T) )
 
-  } else {temp <- clustering}
+  } else {
+    data <- data[ genes[ genes %in% rownames(data) ] ,]
+    temp <- clustering
+  }
 
 
   if( !is.factor(temp) ){
