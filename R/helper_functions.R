@@ -183,14 +183,14 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
     }
 
     if(add_ylims){
-      segments(x0 = n+.6,y0 = panel_row+.02,x1 = n+.6,y1 = panel_row++1/y_padding,xpd=T )
+      segments(x0 = n+.6,y0 = panel_row+.02,x1 = n+.6,y1 = panel_row+1/y_padding,xpd=T )
       segments(x0 = c(n+.6,n+.6) ,
-               y0 = c(panel_row,panel_row+1/y_padding),
+               y0 = c(panel_row+.02,panel_row+1/y_padding),
                x1 = c(c(n+.6 + strwidth(" ",cex = .8)/2  ,n+.6 + strwidth(" ",cex = .8)/2 )),
-               y1 = c(panel_row,panel_row+1/y_padding) ,
+               y1 = c(panel_row+.02,panel_row+1/y_padding) ,
                xpd=T )
       text(x      = c(n+.6),
-           y      = c( panel_row ),
+           y      = c( panel_row+.02 ),
            labels = paste0( " ",round(min(feat,na.rm = T),2)),adj=c(0,0),xpd=T,cex=.8)
       text(x      = c(n+.6),
            y      = c(panel_row+1/y_padding ),
