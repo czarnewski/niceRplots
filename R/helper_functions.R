@@ -461,7 +461,7 @@ plot_bars <- function(data, gene, clustering,assay="RNA",
 #' @export
 #' @rdname barlist
 barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,labels=NULL,srt=0,orderby = NULL,
-                    assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,
+                    assay="RNA",ylab="expression",font.main=1,cex.main=1,main="",cex.axis=1,y_padding=1.1,
                     col = "default",draw_mean_lines=T,...){
 
   if(is.null(clustering)){clustering <- rep("N",ncol(data))}
@@ -535,7 +535,7 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
     } else { message("Feature or metadata not found!!") }
 
     #par(mar=c(2,3,2,1))
-    my_max <- max(c(feat,.00000001),na.rm = T)*1.1
+    my_max <- max(c(feat,.00000001),na.rm = T)*y_padding
     x <- (feat - min(0,min(feat)) )/( my_max - min(0,min(feat)))
     barplot( x[o] , col=col, axes=F,
              border= col,
