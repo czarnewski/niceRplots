@@ -100,7 +100,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
 #' @rdname violist
 violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.2,method="uniform",points_method="proportional",srt=0,transparency=NULL,
                     pt.col="grey",y_padding=1.1,
-                    pt.cex=.5,
+                    pt.cex=.5,add_ylims=FALSE,
                     pt.pch=16,
                     bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
 
@@ -179,6 +179,17 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
       #paste0(col_pal[i])
       #vioplot(x,at = i,add=T,col = paste0(col_pal[i],95),
       #drawRect = F,wex = 1,h = .01, border =  paste0(col_pal[i]))
+
+    }
+
+    if(add_ylims){
+      segments(x0 = n+.6,y0 = panel_row+.02,x1 = n+.6,y1 = panel_row+0.9,xpd=T )
+      text(x      = c(n+.6),
+           y      = c( panel_row ),
+           labels = paste0( " ",round(min(feat,na.rm = T),2)),adj=c(0,0),xpd=T,cex=.8)
+      text(x      = c(n+.6),
+           y      = c(panel_row+0.9 ),
+           labels = paste0( " ",round((my_max),2)),adj=c(0,1),xpd=T,cex=.8)
     }
 
   # if(plot_y_axis){
