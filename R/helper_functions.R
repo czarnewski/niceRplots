@@ -99,7 +99,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
 #' @export
 #' @rdname violist
 violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_axis=T,smooth=.2,method="uniform",points_method="proportional",srt=0,transparency=NULL,
-                    pt.col="grey",
+                    pt.col="grey",y_padding=1.1,
                     pt.cex=.5,
                     pt.pch=16,
                     bw=.7,max_points=200,assay="RNA",ylab="expression",cex.main=1,main=gene,cex.axis=1,col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),...){
@@ -151,7 +151,7 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
     } else { message("Feature or metadata not found!!") }
 
     #par(mar=c(2,3,2,1))
-    my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*1.1
+    my_max <- max(max(feat,na.rm = T),.00000001,na.rm = T)*y_padding
     # message(paste0("feat:",gene,"\tmax:",my_max,"\tmin:",panel_row+.02,"\tdatamax:",max(feat),"\tdatamin:",min(feat)))
 
     for(i in 1:length(levels(temp))){
