@@ -11,8 +11,8 @@ require(RColorBrewer)
 #' @export
 #' @rdname plot_feat
 plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,add_corner_axis=F,
-                      bg=NA,font.labels=1,cex.labels=1,cex=.3,dims=c(1,2),mins=NULL,
-                      add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
+                      bg=NA,font.labels=1,cex.labels=1,cex=.8,dims=c(1,2),mins=NULL,
+                      add_graph=NULL,percent_connections=1,edge_width=0.2,edge_col="grey",nbin=400,n=10,main=NULL,maxs=NULL,
                       col=c("grey90","grey80","grey60","navy","black"),add=F,frame=F,font.main=1,add_legend=F,cex.main=1,...){
   fn <- feat
   if(is(x,"Seurat")){
@@ -50,7 +50,7 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,add_c
 }
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=red[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=red[,dims],graph=add_graph,percent_connections=percent_connections,edge_width=0.2,edge_col="grey") }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(!is.null(label) ){
@@ -92,9 +92,9 @@ plot_feat <- function(x,red="umap",feat=NULL,label=NULL,assay="RNA",pch=16,add_c
 #' @details AAA
 #' @export
 #' @rdname plot_meta
-plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),font.labels=1,cex.labels=1, add_legend=F,add_corner_axis=F,
+plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.8,label=F,dims=c(1,2),font.labels=1,cex.labels=1, add_legend=F,add_corner_axis=F,
                       col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
-                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,add=F,frame=F,font.main=1,cex.main=1,...){
+                      add_graph=NULL,percent_connections=1,edge_width=0.2,edge_col="grey",nbin=400,add_lines=F,main=NULL,add=F,frame=F,font.main=1,cex.main=1,...){
   fn <- feat
     if(is(x,"Seurat")){
       red <- x@reductions[[red]]@cell.embeddings
@@ -119,7 +119,7 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),f
 
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=red[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=red[,dims],graph=add_graph,percent_connections=percent_connections,edge_width=0.2,edge_col="grey") }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(label | add_lines){
@@ -158,7 +158,7 @@ plot_meta <- function(x,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),f
 
 plot_meta2 <- function(data,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,2),
                        font.labels=1,cex.labels=1, col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
-                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,gapx=.2,gapy=.2,
+                      add_graph=NULL,percent_connections=1,edge_width=0.2,edge_col="grey",nbin=400,add_lines=F,main=NULL,gapx=.2,gapy=.2,
                       ncol=1,...){
 
   fn <- feat
@@ -200,7 +200,7 @@ plot_meta2 <- function(data,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,
 
     #adds underlying graph
     if(!is.null(add_graph) ){ if( add_graph %in% names(data@graphs)  ){
-      add_graph(data,red=cbind(x,y),graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+      add_graph(data,red=cbind(x,y),graph=add_graph,percent_connections=percent_connections,edge_width=0.2,edge_col="grey") }else{message("Graph not found!")}}
 
     #compute density and centroids
     if(label | add_lines){
@@ -238,17 +238,32 @@ plot_meta2 <- function(data,red="umap",feat=NULL,pch=16,cex=.3,label=F,dims=c(1,
 #' @details AAA
 #' @export
 #' @rdname add_graph
-add_graph <- function(a,red,graph="RNA_snn",percent_connections=1){
-  g <- graph_from_adjacency_matrix(a@graphs[[graph]],weighted = T,diag = F)
-  g <- simplify(g)
-  eee <- as.data.frame(as_edgelist(g))
-  sel <- (1:nrow(eee))[ 1:nrow(eee) %in% round(seq(1,nrow(eee),length.out = round(nrow(eee)*percent_connections)))]
-  eee <- eee[sel,]
-  eee$x0 <- red[ match(eee[,1],rownames(red)), 1 ]
-  eee$x1 <- red[ match(eee[,2],rownames(red)), 1 ]
-  eee$y0 <- red[ match(eee[,1],rownames(red)), 2 ]
-  eee$y1 <- red[ match(eee[,2],rownames(red)), 2 ]
-  apply(eee,1,function(x){ lines(x[3:4],x[5:6],col="grey80",lwd=.1) })
+add_graph <- function(a,red,graph="RNA_snn",percent_connections=1,edge_width=0.2,edge_col="grey"){
+
+  g <- a@graphs[[graph]]
+
+  if( percent_connections != 1 ){
+    N <- length(g@x)
+    set.seed(1)
+    sel <- sample( 1:N , size = round( N*(1-percent_connections) ) )
+    g@x[sel] <- 0
+    g <- drop0(g)
+  }
+
+  res <- rep(x = 1:(length(g@p)-1) , times = (g@p[-1] - g@p[-length(g@p)]) )
+  segments(x0 = red[g@i+1,1], x1=red[res,1],
+           y0 = red[g@i+1,2], y1=red[res,2],col=edge_col,lwd=edge_width)
+#
+#   g <- graph_from_adjacency_matrix(a@graphs[[graph]],weighted = T,diag = F)
+#   g <- simplify(g)
+#   eee <- as.data.frame(as_edgelist(g))
+#   sel <- (1:nrow(eee))[ 1:nrow(eee) %in% round(seq(1,nrow(eee),length.out = round(nrow(eee)*percent_connections)))]
+#   eee <- eee[sel,]
+#   eee$x0 <- red[ match(eee[,1],rownames(red)), 1 ]
+#   eee$x1 <- red[ match(eee[,2],rownames(red)), 1 ]
+#   eee$y0 <- red[ match(eee[,1],rownames(red)), 2 ]
+#   eee$y1 <- red[ match(eee[,2],rownames(red)), 2 ]
+#   apply(eee,1,function(x){ lines(x[3:4],x[5:6],col="grey80",lwd=.1) })
 }
 
 
@@ -402,7 +417,7 @@ empty_plot <- function(...,main="",frame=F,xlab="",ylab="",cex.main=1,font.main=
 #' @export
 #' @rdname plot_spatial_feat
 plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,assay="Spatial",plot_tissue=T,rescale=T,transparency="",pch=16,
-                              bg=NA,font.labels=1,cex.labels=1,cex=1,mins=NULL,add=F,
+                              bg=NA,font.labels=1,cex.labels=1,cex=1,mins=NULL,add=F,edge_width=0.2,edge_col="grey",
                               add_graph=NULL,percent_connections=1,nbin=400,n=10,main=NULL,maxs=NULL,
                               col=c("grey95","grey70","navy","black"),...){
   fn <- feat
@@ -459,7 +474,7 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
 
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=cbind(coo$imagecol , coo$imagerow)[o,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=cbind(coo$imagecol , coo$imagerow)[o,dims],graph=add_graph,percent_connections=percent_connections,edge_width=0.2,edge_col="grey") }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(!is.null(label) ){
@@ -494,7 +509,7 @@ plot_spatial_feat <- function(x,red="slice1",feat=NULL,res="lowres",label=NULL,a
 #' @rdname plot_spatial_meta
 plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T,plot_tissue=T,pch=16,cex=1,label=F,dims=c(1,2),font.labels=1,cex.labels=1, bg=NA,
                               col = c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2"),RColorBrewer::brewer.pal(8,"Accent"),RColorBrewer::brewer.pal(9,"Pastel1"),RColorBrewer::brewer.pal(8,"Pastel2") ),
-                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,transparency="",add=F,...){
+                      add_graph=NULL,percent_connections=1,nbin=400,add_lines=F,main=NULL,transparency="",add=F,edge_width=0.2,edge_col="grey",...){
   fn <- feat
   feat <- x@meta.data[[feat]]
   if( !is.na(sum(as.numeric(levels(feat)))) ){
@@ -523,7 +538,7 @@ plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T
 
   #adds underlying graph
   if(!is.null(add_graph) ){ if( add_graph %in% names(x@graphs)  ){
-    add_graph(x,red=cbind(coo$imagecol , coo$imagerow)[,dims],graph=add_graph,percent_connections=percent_connections) }else{message("Graph not found!")}}
+    add_graph(x,red=cbind(coo$imagecol , coo$imagerow)[,dims],graph=add_graph,percent_connections=percent_connections,edge_width=0.2,edge_col="grey") }else{message("Graph not found!")}}
 
   #compute density and centroids
   if(label | add_lines){
@@ -574,6 +589,7 @@ graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cut
   g <- graph_from_adjacency_matrix(data@graphs[[graph]],weighted = T,diag = F)
   g <- simplify(g)
   eee <- as.data.frame(as_edgelist(g))
+
   eee$g1 <- clustering_use[ match(eee[,1],colnames(data)) ]
   eee$g2 <- clustering_use[ match(eee[,2],colnames(data)) ]
   res <- data.frame()

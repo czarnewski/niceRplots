@@ -979,6 +979,55 @@ plot_enrich <- function(pathway_name,gmt,stats,enrichment_table=NULL,ylim=NULL,
 
 
 
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname list_to_matrix
+list_to_matrix <- function(ann, knn, diag=TRUE, lower_cutoff=NULL, upper_cutoff=NULL, weighted=TRUE , symmetric=FALSE){
+  if( diag==F ){
+    knn$dist <- knn$dist[,-1] ; knn$idx <- knn$idx[,-1]
+  }
+  if( is.numeric(lower_cutoff) ){
+    knn$dist[knn$dist < lower_cutoff] <- 0
+  }
+  if( is.numeric(upper_cutoff) ){
+    knn$dist[knn$dist > upper_cutoff] <- 0
+  }
+  nn <- sparseMatrix(i = rep(1:nrow(knn$idx),ncol(knn$idx)),
+                            j=c(knn$idx),
+                            x=c(knn$dist),
+                            dims = c(nrow(knn$idx),ann$size()),
+                            dimnames = list(1:nrow(knn$idx),1:(ann$size())),repr = "C")
+  if( symmetric ){
+    nn <- nn + t(nn)
+  }
+  if( !weighted ){
+    nn@x[nn@x > 0] <- 1
+  }
+  nn <- drop0(nn)
+  return(nn)
+}
+
+
+
+#' @title AAA
+#' @description AAA
+#' @details AAA
+#' @export
+#' @rdname fix_embedding
+fix_embedding <- function(layout,graph){
+  res <- t(layout) %*% graph
+  res <- t(res) / colSums2(graph)
+  # dd <- rowSums((layout - res)^2)
+  # dd <- dd / max(dd)
+  # return( as.matrix( ( layout + res*(dd+1)*spar ) / (spar+1) ) )
+  # return( as.matrix( ( layout + res*spar ) / (spar+1) ) )
+  return( res )
+}
+
+
 # CLUSTER DENDROGRAM
 # mypar(4,4)
 # cluster_means <- as.matrix(sapply(unique(cl$membership),function(x){
@@ -1110,7 +1159,6 @@ plot_dots_difference <- function(data, data2, genes, clustering, clustering2, pa
 
 
 
-
 #' @title AAA
 #' @description AAA
 #' @details AAA
@@ -1119,30 +1167,28 @@ plot_dots_difference <- function(data, data2, genes, clustering, clustering2, pa
 add_scale_legend <- function(
   x      = par( "usr" )[2],
   y      = par( "usr" )[4],
-  width  = diff( par( "usr" )[1:2] ),
-  height = diff( par( "usr" )[3:4] ),
+  width  = strwidth(s = " ", units = "user" ),
+  height = strheight(s = " ", units = "user" ),
   labels = c( "min" , "max" ),
   pal    = colorRampPalette(c("blue","navy","grey95","firebrick","red") )(99)
 ){
-    rasterImage(
-      image       = rev( as.raster( pal ) ) ,
-      xleft       = x + width / 40 ,
-      xright      = x + width / 20 ,
-      ybottom     = y - height / 4 ,
-      ytop        = y ,
-      interpolate = FALSE ,
-      xpd         = T
-    )
-
+  rasterImage(
+    image       = rev( as.raster( pal ) ) ,
+    xleft       = x ,
+    xright      = x + width*4 ,
+    ybottom     = y - height*5 ,
+    ytop        = y ,
+    interpolate = FALSE ,
+    xpd         = T
+  )
+  
   N  <- length( labels )
-  text( x =      rep( x + width/20 , N) ,
-        y =      seq( y - height/4 , y , length.out = N ),
-        labels = labels,
-        pos =    4,
+  text( x =      rep( x + width*4 , N) ,
+        y =      seq( y - height*5 , y , length.out = N ),
+        labels = paste0( " ", labels ),
+        adj = c(0,0.5),
         xpd =    T )
 }
-
-
 
 
 
@@ -1155,34 +1201,33 @@ add_scale_legend <- function(
 #' @rdname add_size_legend
 add_size_legend <- function(
   x      = par( "usr" )[2],
-  y      = par( "usr" )[4] - diff(par( "usr" )[3:4])/3,
-  width  = (diff(par( "usr" )[1:2])/40+diff(par( "usr" )[1:2])/20)/2,
-  height = diff(par( "usr" )[3:4])/4,
-  labels = paste0( seq( 0,100, length.out = 3) ,"%" ),
+  y      = par( "usr" )[4] - strheight(s = " ", units = "user" )*9,
+  width  = strwidth(s = " ", units = "user" ),
+  height = strheight(s = " ", units = "user" ),
+  labels = paste0( seq( 0,100, length.out = 5) ,"%" ),
   pal    = "black",
   pch    = 21,
   min.cex = 0.2,
   max.cex = 2.5
 ){
   N  <- length( labels )
-
+  
   if( length(pal) < length(labels) ){
     pal <- colorRampPalette( pal )(99)
   }
-
-  points(x   = rep( x + width , N ),
-         y   = seq(  y-1*height , y - height*0.2 ,length.out = N ),
+  
+  points(x   = rep( x + width*2 , N ),
+         y   = seq(  y - height*5 , y ,length.out = N ),
          cex = seq( min.cex, max.cex , length.out = N ),
          xpd = T ,
          bg  = pal ,
          pch = 21 )
-  text(x      = rep( x+width , N ),
-       y      = seq( y-1*height ,y-height*0.2 ,  length.out = N ),
-       labels = labels,
-       pos    = 4,
+  text(x   = rep( x + width*4 , N ),
+       y   = seq(  y - height*5 , y ,length.out = N ),
+       labels = paste0( " ", labels) ,
+       adj = c(0,0.5),
        xpd    = T)
 }
-
 
 
 
