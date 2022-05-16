@@ -349,10 +349,10 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
   # points(rep(1:ncol(x1),nrow(x1)),sort(rep(1:(nrow(x1)),ncol(x1))), cex=c(t(x2) )*2+min_size,
   #        pch=16, col=c( "grey95",colorRampPalette(pal)(19))[c(t(x1) )*18+1 ],xpd=T)
 
-  text(1:ncol(x1), par("usr")[3] - (par("usr")[4])/200, labels = colnames(x1), srt = srt,
+  text(1:ncol(x1), par("usr")[3] - strheight(s = " ", units = "user" )/2, labels = colnames(x1), srt = srt,
        adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),
        xpd = TRUE, cex=cex.col)
-  text(par("usr")[1] - (par("usr")[2])/200, nrow(x1):1 , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
+  text(par("usr")[1] - strwidth(s = " ", units = "user" ), nrow(x1):1 , labels = rownames(x1), srt = 0, adj = c(1,0.5), xpd = TRUE, cex=cex.row)
 
   if(show_axis){
     lines(c(.5,.5),c(.5,nrow(x1)+.5),col="black",lwd=1,xpd=T)
