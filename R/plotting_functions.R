@@ -522,8 +522,8 @@ plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T
 
   #creates plot
   coo <- x@images[[red]]@coordinates
-  coo$imagecol <- coo$imagecol*x@images[[red]]@scale.factors$lowres
-  coo$imagerow <- dim(x@images[[red]]@image)[1] - coo$imagerow*x@images[[red]]@scale.factors$lowres
+  coo$imagecol <- coo$imagecol*x@images[[red]]@scale.factors$hires
+  coo$imagerow <- dim(x@images[[red]]@image)[1] - coo$imagerow*x@images[[red]]@scale.factors$hires
   spot_col_lims <- range(coo$imagecol)
   spot_row_lims <- range(coo$imagerow)
   if(!add){
