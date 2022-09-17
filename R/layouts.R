@@ -1,7 +1,11 @@
 
 
 #' Sets better default values for the base R grafics
+#' @title AAA
+#' @description AAA
+#' @details AAA
 #' @export
+#' @rdname mypar
 mypar <- function(
   R = 1,
   C = 1,
@@ -21,7 +25,11 @@ mypar <- function(
 
 
 #' Prints joint-matrices to the console.
+#' @title AAA
+#' @description AAA
+#' @details AAA
 #' @export
+#' @rdname LM
 LM <- function(
   X = NA,
   R = 1,
@@ -33,7 +41,9 @@ LM <- function(
   if (is.object(X) || !is.atomic(X))
         X <- as.vector(X)
   X <- as.character(X)
-  M <- base::.Internal(matrix(X, nrow = R, ncol = C, B, DN, missing(R),missing(C)))
+  M <- base::.Internal(matrix(X, nrow = R, ncol = C, B, DN,missing(R),missing(C)))
+  # M <- matrix(X, nrow = R, ncol = C, B, )
+
   attr(M,"W") <- rep(W,ncol(M))[1:ncol(M)]
   attr(M,"H") <- rep(H,nrow(M))[1:nrow(M)]
   return(M)
@@ -43,11 +53,11 @@ LM <- function(
 #' Prints joint-matrices to the console.
 #' @export
 #' @param
+#' @rdname vis
 #' @example
 #' # Create a layout matrix and visualise it
 #' A <- LM( X=1:6 , C=2 , W=c(3,4) , H=c(3,2,7) )
 #' vis(A)
-
 vis <- function(X){
 
   attr(X,"H") <- round(attr(X,"H"),2)
@@ -88,6 +98,7 @@ vis <- function(X){
 #' @param cols A vector containing the column indexe(s) to extract from the
 #' layout-matrix `X`. This parameter can be used in conjuction with `rows` and
 #'  `pattern` for more flexible subsetting.
+#' @rdname select
 #' @return This function returns a layout matrix containing the selected pattern,
 #' row and/or column.
 #' @examples
@@ -139,12 +150,11 @@ select <- function(X, rows=NULL, cols=NULL, pattern=NULL, inverse=FALSE){
   return( M )
 }
 
-viewer <- getOption("viewer")
-viewer("https://export.uppmax.uu.se/snic2022-23-113/hdca_webdev/03_interactive_svg/")
 
 
 #' Combines two layout matricies on the matching the pattern value.
 #' @export
+#' @rdname combine
 #' @param M1 The target layout-matrix containing a string matching the pattern
 #' specified.
 #' @param M2 The layout-matrix to be inserted in the target layout-matrix.
@@ -212,160 +222,118 @@ combine <- function( M1 , M2 , pattern = NULL ){
 
 
 
-
-
-
-
-
-
-
-B <- LM( X=c(1,"A",2,"A") , C=2 , H=c(1,3) )
-vis(B)
-C <- LM( X=1:6 , C=2 , W=c(3,4) , H=c(3,2,7) )
-vis(C)
-combine(M1 = B,M2 = C,pattern = "A")
-
-
-
-
-
-X <- B
-# Expand rows
-tmp <- rep(1:nrow(X),rows)
-X <- X[tmp,]
-
-# Expand columns
-tmp <- rep(1:ncol(X),cols)
-X <- X[,tmp]
-
-
-
-A
-
-
-sel <- !grepl("[0-9]",X)
-if( sum(sel) > 0){
-  for(i in X[sel] ){
-
-
-}}
-
-
-
-
-CLM <- function(){
-
-}
-
-
+#' Creates a new layout to display plots.
+#' @export
+#' @param X A layout-matrix created with the function `LM`.
+#' @rdname new_layout
 new_layout <- function(X){
   layout(
     mat     = X,
-    widths  = attr(A,"W"),
-    heights = attr(A,"H")
+    widths  = base::attr(A,"W"),
+    heights = base::attr(A,"H")
   )
 }
 
+#
+# ELM <- function(X,R,C){
+#   # Expand rows
+#   tmp <- rep(1:nrow(X),rows)
+#   X <- X[tmp,]
+#
+#   # Expand columns
+#   tmp <- rep(1:ncol(X),cols)
+#   X <- X[,tmp]
+#
+#   attr(X,"W") <- rep(1,ncol(X))
+#   attr(X,"H") <- rep(1,nrow(X))
+#
+#   return(X)
+# }
 
-ELM <- function(X,R,C){
-  # Expand rows
-  tmp <- rep(1:nrow(X),rows)
-  X <- X[tmp,]
-
-  # Expand columns
-  tmp <- rep(1:ncol(X),cols)
-  X <- X[,tmp]
-
-  attr(X,"W") <- rep(1,ncol(X))
-  attr(X,"H") <- rep(1,nrow(X))
-
-  return(X)
-}
-
-
-new_layout( )
-layout.show()
-
-
-
-A <- LM( X=1:4 , C=2 , W=c(0.2,.35) , H=c(.5,2) )
-A
-A <- ELM(A)
-A
-B <- LM( X=c(1,"A",10,11) , C=2 , W=c(.5,1) , H=c(1,1) )
-B
-
-
-X <- B
-rows <- round( (attr(X,"H"))/min(attr(X,"H")) )
-cols <- round( (attr(X,"W"))/min(attr(X,"W")) )
-
-
-sel <- !grepl("[0-9]",X)
-if( sum(sel) > 0){
-  for(i in X[sel] ){
-    o <- unique(c(t(X)))
-    o <- setNames(1:length(o),o)
-    Ns <- as.numeric(grep("[0-9]",names(o),value = T))
-
-    EI <- ELM(get(i))
-    rows <- round( (attr(X,"H"))/min(attr(X,"H")) )
-    cols <- round( (attr(X,"W"))/min(attr(X,"W")) )
-    XX <- (X == i)*1
-
-    rows <- rows * sum(attr(EI,"H"))
-    cols <- cols * sum(attr(EI,"W"))
-    attr(EI,"W") <- round(attr(EI,"W") * (cols[colSums(XX)>0] / min(attr(EI,"W"))))
-    attr(EI,"H") <- round(attr(EI,"H") * (rows[rowSums(XX)>0] / min(attr(EI,"H"))))
-    EI <- LM( EI ,R = nrow(EI) ,W = attr(EI,"W"),H = attr(EI,"H"))
-    EI <- ELM(EI)
-
-    # rows[rowSums(XX)>0] <- rows[rowSums(XX)>0] * sum(attr(EI,"H"))
-    # cols[colSums(XX)>0] <- cols[colSums(XX)>0] * sum(attr(EI,"W"))
-
-    # Expand rows
-    tmp <- rep(1:nrow(X),rows)
-    X <- X[tmp,]
-
-    # Expand columns
-    tmp <- rep(1:ncol(X),cols)
-    X <- X[,tmp]
-
-    oi <- unique(c(t(get(i))))
-    oi <- setNames(1:length(oi),oi)
-    ff <- grep(i,names(o))
-    oi <- oi + (ff-1)
-    sel <- (o > ff) & (grepl('[0-9]',names(o)))
-    if( sum(sel)>0 ){
-      nn <- as.numeric( factor(names(o)[sel]) )
-      nn <- nn + max(oi)
-      o[sel] <- nn
-    }
-    o[i] <- i
-    X
-    for(j in rev(names(o)) ){
-      X[X == j] <- o[j]
-    }
-    for(j in rev(names(oi)) ){
-      EI[EI == j] <- oi[j]
-    }
-
-
-    X[X==i] <- t(EI)
-    X
-
-    X[X==i] <- get(i)
-    o <- unique(c(t(X)))
-    Ns <- as.numeric(grep("[0-9]",o,value = T))
-
-
-  }
-}
-
-
-
-
-
+#
+# new_layout( )
+# layout.show()
+#
+#
+#
+# A <- LM( X=1:4 , C=2 , W=c(0.2,.35) , H=c(.5,2) )
+# A
+# A <- ELM(A)
+# A
+# B <- LM( X=c(1,"A",10,11) , C=2 , W=c(.5,1) , H=c(1,1) )
+# B
+#
+#
+# X <- B
+# rows <- round( (attr(X,"H"))/min(attr(X,"H")) )
+# cols <- round( (attr(X,"W"))/min(attr(X,"W")) )
+#
+#
+# sel <- !grepl("[0-9]",X)
+# if( sum(sel) > 0){
+#   for(i in X[sel] ){
+#     o <- unique(c(t(X)))
+#     o <- setNames(1:length(o),o)
+#     Ns <- as.numeric(grep("[0-9]",names(o),value = T))
+#
+#     EI <- ELM(get(i))
+#     rows <- round( (attr(X,"H"))/min(attr(X,"H")) )
+#     cols <- round( (attr(X,"W"))/min(attr(X,"W")) )
+#     XX <- (X == i)*1
+#
+#     rows <- rows * sum(attr(EI,"H"))
+#     cols <- cols * sum(attr(EI,"W"))
+#     attr(EI,"W") <- round(attr(EI,"W") * (cols[colSums(XX)>0] / min(attr(EI,"W"))))
+#     attr(EI,"H") <- round(attr(EI,"H") * (rows[rowSums(XX)>0] / min(attr(EI,"H"))))
+#     EI <- LM( EI ,R = nrow(EI) ,W = attr(EI,"W"),H = attr(EI,"H"))
+#     EI <- ELM(EI)
+#
+#     # rows[rowSums(XX)>0] <- rows[rowSums(XX)>0] * sum(attr(EI,"H"))
+#     # cols[colSums(XX)>0] <- cols[colSums(XX)>0] * sum(attr(EI,"W"))
+#
+#     # Expand rows
+#     tmp <- rep(1:nrow(X),rows)
+#     X <- X[tmp,]
+#
+#     # Expand columns
+#     tmp <- rep(1:ncol(X),cols)
+#     X <- X[,tmp]
+#
+#     oi <- unique(c(t(get(i))))
+#     oi <- setNames(1:length(oi),oi)
+#     ff <- grep(i,names(o))
+#     oi <- oi + (ff-1)
+#     sel <- (o > ff) & (grepl('[0-9]',names(o)))
+#     if( sum(sel)>0 ){
+#       nn <- as.numeric( factor(names(o)[sel]) )
+#       nn <- nn + max(oi)
+#       o[sel] <- nn
+#     }
+#     o[i] <- i
+#     X
+#     for(j in rev(names(o)) ){
+#       X[X == j] <- o[j]
+#     }
+#     for(j in rev(names(oi)) ){
+#       EI[EI == j] <- oi[j]
+#     }
+#
+#
+#     X[X==i] <- t(EI)
+#     X
+#
+#     X[X==i] <- get(i)
+#     o <- unique(c(t(X)))
+#     Ns <- as.numeric(grep("[0-9]",o,value = T))
+#
+#
+#   }
+# }
+#
+#
+#
+#
+#
 
 
 

@@ -10,7 +10,6 @@
 violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=T,transparency=NULL,plot_x_axis=T,smooth=.1,method="log",points_method="proportional",col=c(scales::hue_pal()(8),RColorBrewer::brewer.pal(9,"Set1"),RColorBrewer::brewer.pal(8,"Set2") ),
                     pt.col="grey",pt.cex=.5,pt.pch=16,bw=.7,max_points=200,assay="RNA",srt=0,ylab="expression",cex.main=1,main=gene,cex.axis=1,...){
 
-
   if( is(object = data,"Seurat") ){
     if(gene %in% rownames(data@assays[[assay]]@data) ){
       feat <- data@assays[[assay]]@data[gene,]
@@ -79,7 +78,7 @@ violins <- function(data, gene=NULL, clustering=NULL, plot_points=T,plot_y_axis=
   abline(h=-.1,v=.4,xpd=F,lwd=2)
   if(plot_x_axis){
     # axis(1, at=1:n, labels=sort(unique(data@meta.data[,clustering])),cex.axis=cex.axis)
-    text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
+    text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))), xpd = T, cex=cex.axis)
   }
   # if(plot_y_axis){
   #     axis(2, at=seq(-100,100,by = 1), labels=seq(-100,100,by = 1),cex.axis=cex.axis,las=1)
@@ -215,7 +214,7 @@ violist <- function(data, genes, clustering, plot_points=T,plot_y_axis=T,plot_x_
   # mtext(at = (length(genes):1)-.5 , side = 2, text = genes, las=1 )
   text( par("usr")[1] - (par("usr")[2])/200 , (length(genes):1)-.5, labels = genes,
         srt = 0, adj = c(1,.5), xpd = T, cex=cex.axis)
-  text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
+  text( 1:n, par("usr")[3] - (par("usr")[4])/200, labels = levels(temp), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))), xpd = T, cex=cex.axis)
 
 }
 #---------------
@@ -590,7 +589,7 @@ barlist <- function(data, genes, clustering=NULL, plot_y_axis=T,plot_x_axis=T,la
         srt = 0, adj = c(1,.5), xpd = T, cex=cex.axis)
 
   text( (cumsum(table(temp))*1.2 - .5)  - ((table(temp)/2)*1.2 - .5 ), par("usr")[3],
-        labels = sort(unique(temp)), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))),, xpd = T, cex=cex.axis)
+        labels = sort(unique(temp)), srt = srt, adj = c(ifelse(srt==0,.5,ifelse(srt==90,1,1)),ifelse(srt==0,1,ifelse(srt==90,.5,1))), xpd = T, cex=cex.axis)
 
 }
 #---------------
@@ -1181,7 +1180,7 @@ add_scale_legend <- function(
     interpolate = FALSE ,
     xpd         = T
   )
-  
+
   N  <- length( labels )
   text( x =      rep( x + width*4 , N) ,
         y =      seq( y - height*5 , y , length.out = N ),
@@ -1211,11 +1210,11 @@ add_size_legend <- function(
   max.cex = 2.5
 ){
   N  <- length( labels )
-  
+
   if( length(pal) < length(labels) ){
     pal <- colorRampPalette( pal )(99)
   }
-  
+
   points(x   = rep( x + width*2 , N ),
          y   = seq(  y - height*5 , y ,length.out = N ),
          cex = seq( min.cex, max.cex , length.out = N ),
