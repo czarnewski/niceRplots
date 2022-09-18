@@ -11,11 +11,12 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Imports: 
-    igraph,
-    Matrix,
     RColorBrewer,
-    rhdf5,
     scales
 Suggests: 
     slingshot,
-    Seurat
+    Seurat,
+    igraph,
+    Matrix,
+    rhdf5,
+
