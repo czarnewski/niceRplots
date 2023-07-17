@@ -1364,11 +1364,11 @@ save_matrix_to_HDF5 <- function( matrix , file_name , feature_type="Gene Express
 #' @rdname read_h5
 read_h5 <- function(x){
   return( Matrix::sparseMatrix(
-    i = h5read(x,name = "/matrix/indices")+1,
-    p = h5read(x,name = "/matrix/indptr"),
-    x = as.numeric(h5read(x,name = "/matrix/data")),
-    dims = h5read(x,name = "/matrix/shape"),
-    dimnames = list(h5read(x,name = "/matrix/features/_all_tag_keys"),
-                    h5read(x,name = "/matrix/barcodes")),repr="C" ))
+    i = rhdf5::h5read(x,name = "/matrix/indices")+1,
+    p = rhdf5::h5read(x,name = "/matrix/indptr"),
+    x = as.numeric(rhdf5::h5read(x,name = "/matrix/data")),
+    dims = rhdf5::h5read(x,name = "/matrix/shape"),
+    dimnames = list(rhdf5::h5read(x,name = "/matrix/features/_all_tag_keys"),
+                    rhdf5::h5read(x,name = "/matrix/barcodes")),repr="C" ))
 }
 
