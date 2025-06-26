@@ -310,6 +310,7 @@ plot_dots <- function(data, genes, clustering, pal=c("grey90","grey70","navy"),m
   x1 <- Matrix::t( Matrix::t(x1) / totals )
   max1 <- apply(x1,1,max) ; max1[max1==0] <- 1
   x1 <- x1 / max1
+  if( min(x1) < 0 ){ x1 <- (x1 - min(x1))/(max(x1) - min(x1) )}
 
   x2 <- (data>0) %*% mm
   x2 <- Matrix::t( Matrix::t(x2) / totals )
