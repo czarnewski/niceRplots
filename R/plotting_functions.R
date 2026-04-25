@@ -573,7 +573,7 @@ plot_spatial_meta <- function(x,red="slice1",feat=NULL,assay="Spatial",rescale=T
 graph_abstraction <- function( data , red="umap" , clustering , graph="SNN", cutoff=0, nn=0){
 
   clustering_use <- factor(data@meta.data[,clustering])
-  mm <- model.matrix( ~ 0 + clustering_use )
+  mm <- sparse.model.matrix( ~ 0 + clustering_use )
   colnames(mm) <- levels(clustering_use)
 
   # res <- data@graphs[[graph]]
