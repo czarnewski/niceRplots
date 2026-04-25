@@ -1292,7 +1292,7 @@ annotate_clusters <- function( data ,
   res <- as.matrix(Matrix::t(Matrix::t(temp) %*% cell_markers_table[common,]))
   # data@meta.data[,colnames(res)] <- res
 
-  mm <- model.matrix(~ 0 + data@meta.data[,clustering] )
+  mm <- Matrix::sparse.model.matrix(~ 0 + data@meta.data[,clustering] )
   colnames(mm)<- levels(data@meta.data[,clustering])
   res2 <- res %*% mm
   res2 <- t( t(res2) / (1+colSums(mm)) )
